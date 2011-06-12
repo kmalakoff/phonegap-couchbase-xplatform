@@ -1,0 +1,8 @@
+//
+// Prefix header for all source files of the 'phonegap-couchbase-ios' target in the 'phonegap-couchbase-ios' project
+//
+
+#ifdef __OBJC__
+    #import <UIKit/UIKit.h>
+    #import <Foundation/Foundation.h>
+#endif

@@ -1,0 +1,55 @@
+This repository is a first step to help the Couchbase community develop a standard, cross-platform (iOS, Android, and future platforms!) way of managing a CouchDB when using PhoneGap.
+
+I started a thread explain this: https://groups.google.com/group/mobile-couchbase/browse_thread/thread/f4e9bc30e1dd3818
+
+The goals are:
+1) Allow for offline CouchApp loading since you cannot assume there will be a connection to download a CouchApp.
+2) Provide a standard way for users to to authorized locally and to create an account on a remote server. 
+3) Provide best practice samples for organizing and syncing local and remote databases. For example: using local databases like "appdata_db" with server databases like "myusername/appdata_db" and making sure authentication and authorization is secure.
+4) Allow for users to trigger synchronizations from their mobile device while handling 2) and 3).
+5) Cross-platform project creation in as simple and trouble free way as possible.
+
+Current Progress
+**************
+1) Offline CouchApp loading on iOS - YES
+2) Offline CouchApp loading on Android - NOT YET..volunteers? 
+
+
+iOS Overview
+**************
+
+Goal 1) Allow for offline CouchApp loading
+
+There is an objective-C class called CouchAppManager which handles: 
+- CouchApp version checking either using the _rev field (version check requires CouchApp JSON loading/parsing) or a client supplied version string (version check can be performed without CouchApp JSON loading/parsing)
+- creating the CouchApp database if it doesn't exist, creating and updating the CouchApp (with the correct _rev and _id fields)
+- loading of any CouchApp page URL
+
+Sample Code:
+
+1) See AppDelegate.h and AppDelegate.m for integration tips. All Couchbase code that is integrated into PhoneGap is labeled with:
+
+// Couchbase changes START
+// Couchbase changes END
+
+2) See AppDelegate.m couchbaseDidStart for a sample usage with _rev field based versioning. If you want to a avoid parsing the CouchApp to determine the version (for example, for release build), just pass a version string instead of nil to loadNewAppVersion:nil.
+
+3) The workflow to update the CouchApp is currently as follows:
+
+  a) Load the CouchApp into a desktop/laptop/cloud CouchDB. For example: 
+     couchapp autopush http://127.0.0.1:5984/mycouchapp_db
+
+  b) When you are happy with the CouchApp, serialize it and put it in the Resources XCode project directory. For example: 
+     cd phonegap-couchbase-xplatform/phonegap-couchbase-ios/phonegap-couchbase-ios/Resources
+     curl -X GET http://127.0.0.1:5984/mycouchapp_db/_design/mycouchapp?attachments=true > mycouchapp.json
+
+  c) Then build and run in XCode. 
+
+
+Notes:
+- doesn't use Trundle to try to keep it minimal.
+- currently bundled with minimal Vendor Source (Couchbase, TouchFoundation, TouchJSON). The TouchJSON could be moved over to use a compiled library if needed.
+- currently the library is written to use synchronous HTTP calls to keep the program flow simple. You can use Grand Central Dispatch to put it on a background thread.
+
+Known issues:
+- Currently the iPhone and iPad device versions don't compile cleanly. However, the simulator does. If anyone can fix this and explain how, please let me know!

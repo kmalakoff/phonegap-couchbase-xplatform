@@ -1,0 +1,5 @@
+.DS_Store
+**/.DS_Store
+phonegap-couchbase-ios/build/*
+phonegap-couchbase-ios/phonegap-couchbase-ios.xcodeproj/project.xcworkspace/*
+phonegap-couchbase-ios/phonegap-couchbase-ios.xcodeproj/project.xcworkspace/**/*

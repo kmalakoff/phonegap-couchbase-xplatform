@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>DetectPhoneNumber</key>
+	<true/>
+	<key>EnableAcceleration</key>
+	<true/>
+	<key>EnableLocation</key>
+	<true/>
+	<key>ExternalHosts</key>
+	<array>
+		<string>127.0.0.1</string>
+		<string>0.0.0.0</string>
+	</array>
+	<key>TopActivityIndicator</key>
+	<string>gray</string>
+</dict>
+</plist>
