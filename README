@@ -51,5 +51,26 @@ Notes:
 - currently bundled with minimal Vendor Source (Couchbase, TouchFoundation, TouchJSON). The TouchJSON could be moved over to use a compiled library if needed.
 - currently the library is written to use synchronous HTTP calls to keep the program flow simple. You can use Grand Central Dispatch to put it on a background thread.
 
-Known issues:
-- Currently the iPhone and iPad device versions don't compile cleanly. However, the simulator does. If anyone can fix this and explain how, please let me know!
+Troubleshooting:
+1) If you want to run it on a physical device:
+-> You need to apply for an appID and configure it using these instructions: http://wiki.phonegap.com/w/page/39991939/Getting-Started-with-PhoneGap-iOS-using-Xcode-4-(Template-Version)
+
+2) If you are having problems with your app switching from PhoneGap to the local Safari app when you call [webView stringByEvaluatingJavaScriptFromString:couchappApgeURL], you need to 
+add localhost to the ExternalHosts key in your PhoneGap.plist:
+-> Select your PhoneGap.plist in the "Supporting Files" directory, and 
+add the following 2 items as separate entries: 127.0.0.1 and 0.0.0.0.
+
+3) If you get this warning: "Sending 'AppDelegate *' to parameter of incompatible type 'id<CouchbaseDelegate>'" 
+-> This is because you need to set up your app delegate to also be a 
+CouchbaseDelegate like this: 
+    @interface AppDelegate : PhoneGapDelegate<CouchbaseDelegate>
+
+4) If you get this warning: "Warning: The Copy Bundle Resources build phase contains this target's Info.plist file 'YourApp-Info.plist'. " 
+-> You need to go into the "Copy Bundle Resources" and delete your App 
+plist...Select your project in the left side panel, then select your 
+TARGET, then choose the "Build Phases" tab, open "Copy Bundle 
+Resources", select your App plist, press '-' to delete. 
+
+Good luck!
+
+Xmann
