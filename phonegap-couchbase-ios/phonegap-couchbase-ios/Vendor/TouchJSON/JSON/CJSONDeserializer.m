@@ -70,6 +70,9 @@ NSString *const kJSONDeserializerErrorDomain  = @"CJSONDeserializerErrorDomain";
     if (scanner == NULL)
         {
         scanner = [[CJSONScanner alloc] init];
+
+        // BUGFIX
+        scanner.options = self.options; 
         }
     return(scanner);
     }

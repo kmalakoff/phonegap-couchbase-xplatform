@@ -44,8 +44,8 @@
 		0A1A735C13A4D19800850912 /* CJSONDeserializer.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A1A735313A4D19800850912 /* CJSONDeserializer.m */; };
 		0A1A735D13A4D19800850912 /* CJSONScanner.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A1A735513A4D19800850912 /* CJSONScanner.m */; };
 		0A1A735E13A4D19800850912 /* CJSONSerializer.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A1A735713A4D19800850912 /* CJSONSerializer.m */; };
-		0A263E1013A4DF440046758F /* libCouchbase.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A263E0F13A4DF440046758F /* libCouchbase.a */; };
 		0A263E1213A4DF510046758F /* libstdc++.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A263E1113A4DF510046758F /* libstdc++.dylib */; };
+		0AC7E6FD13A6A1BA00CCB232 /* libCouchbase.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0AC7E6FC13A6A1BA00CCB232 /* libCouchbase.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -112,8 +112,8 @@
 		0A1A735613A4D19800850912 /* CJSONSerializer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CJSONSerializer.h; path = Vendor/TouchJSON/JSON/CJSONSerializer.h; sourceTree = "<group>"; };
 		0A1A735713A4D19800850912 /* CJSONSerializer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CJSONSerializer.m; path = Vendor/TouchJSON/JSON/CJSONSerializer.m; sourceTree = "<group>"; };
 		0A1A735813A4D19800850912 /* JSONRepresentation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = JSONRepresentation.h; path = Vendor/TouchJSON/JSON/JSONRepresentation.h; sourceTree = "<group>"; };
-		0A263E0F13A4DF440046758F /* libCouchbase.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libCouchbase.a; path = "../../../Library/Developer/Xcode/Templates/Couchbase/Couchbase Base.xctemplate/libCouchbase.a"; sourceTree = "<group>"; };
 		0A263E1113A4DF510046758F /* libstdc++.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libstdc++.dylib"; path = "usr/lib/gcc/arm-apple-darwin10/4.0.1/libstdc++.dylib"; sourceTree = SDKROOT; };
+		0AC7E6FC13A6A1BA00CCB232 /* libCouchbase.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libCouchbase.a; path = "phonegap-couchbase-ios/Vendor/Couchbase/libCouchbase.a"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -134,8 +134,8 @@
 				0A1A730913A4D09F00850912 /* SystemConfiguration.framework in Frameworks */,
 				0A1A730B13A4D09F00850912 /* MobileCoreServices.framework in Frameworks */,
 				0A1A731713A4D09F00850912 /* PhoneGap.framework in Frameworks */,
-				0A263E1013A4DF440046758F /* libCouchbase.a in Frameworks */,
 				0A263E1213A4DF510046758F /* libstdc++.dylib in Frameworks */,
+				0AC7E6FD13A6A1BA00CCB232 /* libCouchbase.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -155,7 +155,6 @@
 				0A263E1113A4DF510046758F /* libstdc++.dylib */,
 				0A1A733613A4D0E100850912 /* www */,
 				0A1A730C13A4D09F00850912 /* phonegap-couchbase-ios */,
-				0A1A733D13A4D12F00850912 /* Vendor */,
 				0A1A72F313A4D09F00850912 /* Frameworks */,
 				0A1A72F113A4D09F00850912 /* Products */,
 			);
@@ -172,7 +171,7 @@
 		0A1A72F313A4D09F00850912 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				0A263E0F13A4DF440046758F /* libCouchbase.a */,
+				0AC7E6FC13A6A1BA00CCB232 /* libCouchbase.a */,
 				0A1A72F413A4D09F00850912 /* Foundation.framework */,
 				0A1A72F613A4D09F00850912 /* UIKit.framework */,
 				0A1A72F813A4D09F00850912 /* CoreGraphics.framework */,
@@ -196,6 +195,7 @@
 				0A1A731813A4D09F00850912 /* Resources */,
 				0A1A732913A4D09F00850912 /* Classes */,
 				0A1A732E13A4D09F00850912 /* Plugins */,
+				0A1A733D13A4D12F00850912 /* Vendor */,
 				0A1A730D13A4D09F00850912 /* Supporting Files */,
 			);
 			path = "phonegap-couchbase-ios";
@@ -271,7 +271,6 @@
 				0A1A733E13A4D14000850912 /* TouchJSON */,
 			);
 			name = Vendor;
-			path = "phonegap-couchbase-ios";
 			sourceTree = "<group>";
 		};
 		0A1A733E13A4D14000850912 /* TouchJSON */ = {

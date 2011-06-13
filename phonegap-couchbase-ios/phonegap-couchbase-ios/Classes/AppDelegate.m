@@ -39,10 +39,9 @@
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,0), ^{
         
         // load the coachapp if needed
-        [couchAppManager loadNewAppVersion:nil getAppAsJSONStringBlock:^(){
+        [couchAppManager loadNewAppVersion:nil getAppAsJSONData_PassOwnershipBlock:^(){
             NSString *pathToApp = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"mycouchapp.json"];
-            NSString *appAsJSON = [NSString stringWithContentsOfFile:pathToApp usedEncoding:nil error:nil];
-            return appAsJSON;
+            return (NSData*) [[NSData alloc] initWithContentsOfFile:pathToApp];
         }];
         
         // go back to the main thread because that is where the webview is

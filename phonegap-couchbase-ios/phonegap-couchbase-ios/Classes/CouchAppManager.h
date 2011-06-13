@@ -35,14 +35,14 @@
 // Public Interface
 ///////////////////////
 -(CouchAppManager*)init:(NSURL*)serverURL serverCredential:(NSURLCredential*)serverCredential databaseName:(NSString*)databaseName documentName:(NSString*)documentName; 
--(void)loadNewAppVersion:(NSString*)newVersionOverride getAppAsJSONStringBlock:(NSString* (^)())getAppAsJSONStringBlock; // newVersionOverride allows for an optimization by the caller supplying a version string rather than parsing the appAsJSONString and using the _rev field (which is the default if newVersion is not supplied) 
+-(void)loadNewAppVersion:(NSString*)newVersionOverride getAppAsJSONData_PassOwnershipBlock:(NSData* (^)())getAppAsJSONData_PassOwnershipBlock; // newVersionOverride allows for an optimization by the caller supplying a version string rather than parsing the appAsJSONString and using the _rev field (which is the default if newVersion is not supplied) 
 -(void)gotoAppPage:(UIWebView*)webView page:(NSString*)page; 
 
 ///////////////////////
 // Internal Flow
 ///////////////////////
 -(BOOL)ensureAppDatabaseExists;
--(NSDictionary*)getAppAsJSONDictionary:(NSString*)appAsJSONString;
+-(NSMutableDictionary*)getAppAsJSONMutableDictionary:(NSData* (^)())getAppAsJSONData_PassOwnershipBlock;
 -(NSString*)getCurrentAppVersion;
 -(void)setCurrentAppVersion:(NSString*)version;
 
@@ -56,10 +56,10 @@
 ///////////////////////
 // HTTP Helpers
 ///////////////////////
+-(NSDictionary*)serverHTTPRequestWithJSONResponse_HeaderFields:(NSString*)urlString httpMethod:(NSString*)httpMethod;
 -(NSDictionary*)serverHTTPRequestWithJSONResponse:(NSString*)urlString httpMethod:(NSString*)httpMethod;
 -(NSDictionary*)serverHTTPRequestWithJSONResponse:(NSString*)urlString httpMethod:(NSString*)httpMethod data:(NSData*)data contentType:(NSString*)contentType;
--(NSDictionary*)serverHTTPRequestWithJSONResponse_CreateDocument:(NSString*)urlString dataJSONDictionary:(NSDictionary*)dataJSONDictionary;
--(NSDictionary*)serverHTTPRequestWithJSONResponse_UpdateDocument:(NSString*)urlString dataJSONDictionary:(NSDictionary*)dataJSONDictionary _revCurrent:(NSString*)_revCurrent;
+-(NSDictionary*)serverHTTPRequestWithJSONResponse_CreateDocument:(NSString*)urlString dataJSONMutableDictionary:(NSMutableDictionary*)dataJSONMutableDictionary;
 -(NSDictionary*)serverHTTPRequestWithJSONResponse_UpdateDocument:(NSString*)urlString dataJSONMutableDictionary:(NSMutableDictionary*)dataJSONMutableDictionary _revCurrent:(NSString*)_revCurrent;
 
 -(void)requestAddURLString:(NSMutableURLRequest*)request urlString:(NSString*)urlString;
