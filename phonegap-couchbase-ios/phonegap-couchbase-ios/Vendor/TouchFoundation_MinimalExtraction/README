@@ -1,0 +1,5 @@
+These are the minimal files for Base64 encoded strings that is needed for HTTP authorization. 
+
+If you are using the full TouchFoundation, do not include these files in your project.
+
+If Apple provides a built in library for Base64 encoded strings, we can migrate them to a standard implementation.
