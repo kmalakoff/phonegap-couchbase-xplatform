@@ -1,8 +1,8 @@
 //
 //  AppDelegate.m
-//  None
+//  CouchAppManager
 //
-//  Created by XMann on 6/11/11.
+//  Created by Kevin Malakoff on 6/11/11.
 //  Copyright 2011 None.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -37,11 +37,14 @@
     
     // put on a background thread because currently the manager uses async HTTP calls
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,0), ^{
+
+        NSString *pathToAppVersion = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"mycouchapp.version"];
+        NSString *appVersion = [NSString stringWithContentsOfFile:pathToAppVersion usedEncoding:nil error:nil]; 
         
         // load the coachapp if needed
-        [couchAppManager loadNewAppVersion:nil getAppAsJSONData_PassOwnershipBlock:^(){
+        [couchAppManager loadNewAppVersion:appVersion getAppAsJSONDataBlock:^(){
             NSString *pathToApp = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"mycouchapp.json"];
-            return (NSData*) [[NSData alloc] initWithContentsOfFile:pathToApp];
+            return (NSData*) [NSData dataWithContentsOfFile:pathToApp];
         }];
         
         // go back to the main thread because that is where the webview is

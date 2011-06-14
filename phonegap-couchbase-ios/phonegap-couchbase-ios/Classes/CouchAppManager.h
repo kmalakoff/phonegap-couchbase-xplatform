@@ -2,7 +2,7 @@
 //  CouchAppManager.h
 //  None
 //
-//  Created by XMann on 6/11/11.
+//  Created by Kevin Malakoff on 6/11/11.
 //  Copyright 2011 None.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -24,25 +24,28 @@
     NSURLCredential *couchappServerCredential;      // required for authorization
     NSString* couchappDatabaseName;                 // should be in the form of "mydatabase"
     NSString* couchappDocumentName;                 // should be in the form of "myapp"
+    
+    NSString* _credentialString;
 }
 
-@property (copy) NSURL* couchbaseServerURL;
-@property (copy) NSURLCredential *couchappServerCredential;
-@property (copy) NSString* couchappDatabaseName;
-@property (copy) NSString* couchappDocumentName;
+@property (copy, readwrite) NSURL* couchbaseServerURL;
+@property (copy, readwrite) NSURLCredential *couchappServerCredential;
+@property (copy, readwrite) NSString* couchappDatabaseName;
+@property (copy, readwrite) NSString* couchappDocumentName;
+
+@property (copy, readonly) NSString* _credentialString;
 
 ///////////////////////
 // Public Interface
 ///////////////////////
 -(CouchAppManager*)init:(NSURL*)serverURL serverCredential:(NSURLCredential*)serverCredential databaseName:(NSString*)databaseName documentName:(NSString*)documentName; 
--(void)loadNewAppVersion:(NSString*)newVersionOverride getAppAsJSONData_PassOwnershipBlock:(NSData* (^)())getAppAsJSONData_PassOwnershipBlock; // newVersionOverride allows for an optimization by the caller supplying a version string rather than parsing the appAsJSONString and using the _rev field (which is the default if newVersion is not supplied) 
+-(void)loadNewAppVersion:(NSString*)newVersion getAppAsJSONDataBlock:(NSData* (^)())getAppAsJSONDataBlock; // newVersionOverride allows for an optimization by the caller supplying a version string rather than parsing the appAsJSONString and using the _rev field (which is the default if newVersion is not supplied) 
 -(void)gotoAppPage:(UIWebView*)webView page:(NSString*)page; 
 
 ///////////////////////
 // Internal Flow
 ///////////////////////
 -(BOOL)ensureAppDatabaseExists;
--(NSMutableDictionary*)getAppAsJSONMutableDictionary:(NSData* (^)())getAppAsJSONData_PassOwnershipBlock;
 -(NSString*)getCurrentAppVersion;
 -(void)setCurrentAppVersion:(NSString*)version;
 
@@ -56,13 +59,20 @@
 ///////////////////////
 // HTTP Helpers
 ///////////////////////
--(NSDictionary*)serverHTTPRequestWithJSONResponse_HeaderFields:(NSString*)urlString httpMethod:(NSString*)httpMethod;
--(NSDictionary*)serverHTTPRequestWithJSONResponse:(NSString*)urlString httpMethod:(NSString*)httpMethod;
--(NSDictionary*)serverHTTPRequestWithJSONResponse:(NSString*)urlString httpMethod:(NSString*)httpMethod data:(NSData*)data contentType:(NSString*)contentType;
--(NSDictionary*)serverHTTPRequestWithJSONResponse_CreateDocument:(NSString*)urlString dataJSONMutableDictionary:(NSMutableDictionary*)dataJSONMutableDictionary;
--(NSDictionary*)serverHTTPRequestWithJSONResponse_UpdateDocument:(NSString*)urlString dataJSONMutableDictionary:(NSMutableDictionary*)dataJSONMutableDictionary _revCurrent:(NSString*)_revCurrent;
+-(NSData*)serverHTTPRequest:(NSString*)urlString httpMethod:(NSString*)httpMethod response:(NSHTTPURLResponse**)response;
+-(NSData*)serverHTTPRequest:(NSString*)urlString httpMethod:(NSString*)httpMethod data:(NSData*)data contentType:(NSString*)contentType response:(NSHTTPURLResponse**)response;
+-(BOOL)serverHTTPRequest_DeleteDocument:(NSString*)urlString _revCurrent:(NSString*)_revCurrent;
 
 -(void)requestAddURLString:(NSMutableURLRequest*)request urlString:(NSString*)urlString;
 -(void)requestAddCredential:(NSMutableURLRequest*)request;
+
+-(BOOL)responseDataHasFieldAndValue:(NSData*)responseData field:(NSString*)field value:(NSString*)value;
+-(BOOL)responseDataHasField:(NSData*)responseData field:(NSString*)field;
+-(NSString*)responseDataExtractSimpleValue:(NSData*)responseData field:(NSString*)field;     // this is not robust -> the "field" should only occur once and the value should be a simple value (',' or '}')
+
+///////////////////////
+// Misc Helpers
+///////////////////////
+-(NSRange)valueClean:(NSString*)valueString range:(NSRange)range;
 
 @end

@@ -1,8 +1,8 @@
 //
 //  main.m
-//  None
+//  CouchAppManager
 //
-//  Created by XMann on 6/11/11.
+//  Created by Kevin Malakoff on 6/11/11.
 //  Copyright 2011 None.
 //
 

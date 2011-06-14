@@ -1,8 +1,8 @@
 //
 //  AppDelegate.h
-//  None
+//  CouchAppManager
 //
-//  Created by XMann on 6/11/11.
+//  Created by Kevin Malakoff on 6/11/11.
 //  Copyright 2011 None.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not

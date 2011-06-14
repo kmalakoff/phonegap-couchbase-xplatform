@@ -33,18 +33,14 @@
 		0A1A732D13A4D09F00850912 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A1A732C13A4D09F00850912 /* AppDelegate.m */; };
 		0A1A733013A4D09F00850912 /* README in Resources */ = {isa = PBXBuildFile; fileRef = 0A1A732F13A4D09F00850912 /* README */; };
 		0A1A733713A4D0E100850912 /* www in Resources */ = {isa = PBXBuildFile; fileRef = 0A1A733613A4D0E100850912 /* www */; };
-		0A1A733A13A4D0F400850912 /* CouchAppManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A1A733913A4D0F400850912 /* CouchAppManager.m */; };
-		0A1A733C13A4D11F00850912 /* mycouchapp.json in Resources */ = {isa = PBXBuildFile; fileRef = 0A1A733B13A4D11F00850912 /* mycouchapp.json */; };
 		0A1A734413A4D17500850912 /* Couchbase.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 0A1A734313A4D17500850912 /* Couchbase.bundle */; };
 		0A1A734A13A4D18800850912 /* Base64Transcoder.c in Sources */ = {isa = PBXBuildFile; fileRef = 0A1A734613A4D18800850912 /* Base64Transcoder.c */; };
 		0A1A734B13A4D18800850912 /* NSData_Base64Extensions.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A1A734913A4D18800850912 /* NSData_Base64Extensions.m */; };
-		0A1A735913A4D19800850912 /* CDataScanner.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A1A734D13A4D19800850912 /* CDataScanner.m */; };
-		0A1A735A13A4D19800850912 /* CDataScanner_Extensions.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A1A734F13A4D19800850912 /* CDataScanner_Extensions.m */; };
-		0A1A735B13A4D19800850912 /* NSDictionary_JSONExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A1A735113A4D19800850912 /* NSDictionary_JSONExtensions.m */; };
-		0A1A735C13A4D19800850912 /* CJSONDeserializer.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A1A735313A4D19800850912 /* CJSONDeserializer.m */; };
-		0A1A735D13A4D19800850912 /* CJSONScanner.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A1A735513A4D19800850912 /* CJSONScanner.m */; };
-		0A1A735E13A4D19800850912 /* CJSONSerializer.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A1A735713A4D19800850912 /* CJSONSerializer.m */; };
 		0A263E1213A4DF510046758F /* libstdc++.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A263E1113A4DF510046758F /* libstdc++.dylib */; };
+		0A5FF58513A7C0C70087D7FD /* mycouchapp.json in Resources */ = {isa = PBXBuildFile; fileRef = 0A5FF58313A7C0C70087D7FD /* mycouchapp.json */; };
+		0A5FF58613A7C0C70087D7FD /* mycouchapp.version in Resources */ = {isa = PBXBuildFile; fileRef = 0A5FF58413A7C0C70087D7FD /* mycouchapp.version */; };
+		0A5FF58913A7C2610087D7FD /* CouchAppManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A5FF58713A7C2610087D7FD /* CouchAppManager.h */; };
+		0A5FF58A13A7C2610087D7FD /* CouchAppManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A5FF58813A7C2610087D7FD /* CouchAppManager.m */; };
 		0AC7E6FD13A6A1BA00CCB232 /* libCouchbase.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0AC7E6FC13A6A1BA00CCB232 /* libCouchbase.a */; };
 /* End PBXBuildFile section */
 
@@ -90,29 +86,17 @@
 		0A1A732C13A4D09F00850912 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = AppDelegate.m; path = Classes/AppDelegate.m; sourceTree = "<group>"; };
 		0A1A732F13A4D09F00850912 /* README */ = {isa = PBXFileReference; lastKnownFileType = text; name = README; path = Plugins/README; sourceTree = "<group>"; };
 		0A1A733613A4D0E100850912 /* www */ = {isa = PBXFileReference; lastKnownFileType = folder; path = www; sourceTree = "<group>"; };
-		0A1A733813A4D0F400850912 /* CouchAppManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CouchAppManager.h; path = Classes/CouchAppManager.h; sourceTree = "<group>"; };
-		0A1A733913A4D0F400850912 /* CouchAppManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CouchAppManager.m; path = Classes/CouchAppManager.m; sourceTree = "<group>"; };
-		0A1A733B13A4D11F00850912 /* mycouchapp.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = mycouchapp.json; path = Resources/mycouchapp.json; sourceTree = "<group>"; };
 		0A1A734313A4D17500850912 /* Couchbase.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; name = Couchbase.bundle; path = Vendor/Couchbase/Couchbase.bundle; sourceTree = "<group>"; };
 		0A1A734513A4D18000850912 /* Couchbase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Couchbase.h; path = Vendor/Couchbase/Couchbase.h; sourceTree = "<group>"; };
 		0A1A734613A4D18800850912 /* Base64Transcoder.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Base64Transcoder.c; path = Vendor/TouchFoundation/Base64Transcoder.c; sourceTree = "<group>"; };
 		0A1A734713A4D18800850912 /* Base64Transcoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Base64Transcoder.h; path = Vendor/TouchFoundation/Base64Transcoder.h; sourceTree = "<group>"; };
 		0A1A734813A4D18800850912 /* NSData_Base64Extensions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NSData_Base64Extensions.h; path = Vendor/TouchFoundation/NSData_Base64Extensions.h; sourceTree = "<group>"; };
 		0A1A734913A4D18800850912 /* NSData_Base64Extensions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NSData_Base64Extensions.m; path = Vendor/TouchFoundation/NSData_Base64Extensions.m; sourceTree = "<group>"; };
-		0A1A734C13A4D19800850912 /* CDataScanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CDataScanner.h; path = Vendor/TouchJSON/CDataScanner.h; sourceTree = "<group>"; };
-		0A1A734D13A4D19800850912 /* CDataScanner.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CDataScanner.m; path = Vendor/TouchJSON/CDataScanner.m; sourceTree = "<group>"; };
-		0A1A734E13A4D19800850912 /* CDataScanner_Extensions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CDataScanner_Extensions.h; path = Vendor/TouchJSON/Extensions/CDataScanner_Extensions.h; sourceTree = "<group>"; };
-		0A1A734F13A4D19800850912 /* CDataScanner_Extensions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CDataScanner_Extensions.m; path = Vendor/TouchJSON/Extensions/CDataScanner_Extensions.m; sourceTree = "<group>"; };
-		0A1A735013A4D19800850912 /* NSDictionary_JSONExtensions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NSDictionary_JSONExtensions.h; path = Vendor/TouchJSON/Extensions/NSDictionary_JSONExtensions.h; sourceTree = "<group>"; };
-		0A1A735113A4D19800850912 /* NSDictionary_JSONExtensions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NSDictionary_JSONExtensions.m; path = Vendor/TouchJSON/Extensions/NSDictionary_JSONExtensions.m; sourceTree = "<group>"; };
-		0A1A735213A4D19800850912 /* CJSONDeserializer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CJSONDeserializer.h; path = Vendor/TouchJSON/JSON/CJSONDeserializer.h; sourceTree = "<group>"; };
-		0A1A735313A4D19800850912 /* CJSONDeserializer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CJSONDeserializer.m; path = Vendor/TouchJSON/JSON/CJSONDeserializer.m; sourceTree = "<group>"; };
-		0A1A735413A4D19800850912 /* CJSONScanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CJSONScanner.h; path = Vendor/TouchJSON/JSON/CJSONScanner.h; sourceTree = "<group>"; };
-		0A1A735513A4D19800850912 /* CJSONScanner.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CJSONScanner.m; path = Vendor/TouchJSON/JSON/CJSONScanner.m; sourceTree = "<group>"; };
-		0A1A735613A4D19800850912 /* CJSONSerializer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CJSONSerializer.h; path = Vendor/TouchJSON/JSON/CJSONSerializer.h; sourceTree = "<group>"; };
-		0A1A735713A4D19800850912 /* CJSONSerializer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CJSONSerializer.m; path = Vendor/TouchJSON/JSON/CJSONSerializer.m; sourceTree = "<group>"; };
-		0A1A735813A4D19800850912 /* JSONRepresentation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = JSONRepresentation.h; path = Vendor/TouchJSON/JSON/JSONRepresentation.h; sourceTree = "<group>"; };
 		0A263E1113A4DF510046758F /* libstdc++.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libstdc++.dylib"; path = "usr/lib/gcc/arm-apple-darwin10/4.0.1/libstdc++.dylib"; sourceTree = SDKROOT; };
+		0A5FF58313A7C0C70087D7FD /* mycouchapp.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = mycouchapp.json; path = Resources/mycouchapp.json; sourceTree = "<group>"; };
+		0A5FF58413A7C0C70087D7FD /* mycouchapp.version */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = mycouchapp.version; path = Resources/mycouchapp.version; sourceTree = "<group>"; };
+		0A5FF58713A7C2610087D7FD /* CouchAppManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CouchAppManager.h; path = Classes/CouchAppManager.h; sourceTree = "<group>"; };
+		0A5FF58813A7C2610087D7FD /* CouchAppManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CouchAppManager.m; path = Classes/CouchAppManager.m; sourceTree = "<group>"; };
 		0AC7E6FC13A6A1BA00CCB232 /* libCouchbase.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libCouchbase.a; path = "phonegap-couchbase-ios/Vendor/Couchbase/libCouchbase.a"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -217,7 +201,8 @@
 		0A1A731813A4D09F00850912 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				0A1A733B13A4D11F00850912 /* mycouchapp.json */,
+				0A5FF58313A7C0C70087D7FD /* mycouchapp.json */,
+				0A5FF58413A7C0C70087D7FD /* mycouchapp.version */,
 				0A1A731913A4D09F00850912 /* icons */,
 				0A1A732013A4D09F00850912 /* splash */,
 			);
@@ -249,8 +234,8 @@
 			children = (
 				0A1A732A13A4D09F00850912 /* AppDelegate.h */,
 				0A1A732C13A4D09F00850912 /* AppDelegate.m */,
-				0A1A733813A4D0F400850912 /* CouchAppManager.h */,
-				0A1A733913A4D0F400850912 /* CouchAppManager.m */,
+				0A5FF58713A7C2610087D7FD /* CouchAppManager.h */,
+				0A5FF58813A7C2610087D7FD /* CouchAppManager.m */,
 			);
 			name = Classes;
 			sourceTree = "<group>";
@@ -268,29 +253,8 @@
 			children = (
 				0A1A734013A4D14600850912 /* Couchbase */,
 				0A1A733F13A4D14500850912 /* TouchFoundation */,
-				0A1A733E13A4D14000850912 /* TouchJSON */,
 			);
 			name = Vendor;
-			sourceTree = "<group>";
-		};
-		0A1A733E13A4D14000850912 /* TouchJSON */ = {
-			isa = PBXGroup;
-			children = (
-				0A1A734C13A4D19800850912 /* CDataScanner.h */,
-				0A1A734D13A4D19800850912 /* CDataScanner.m */,
-				0A1A734E13A4D19800850912 /* CDataScanner_Extensions.h */,
-				0A1A734F13A4D19800850912 /* CDataScanner_Extensions.m */,
-				0A1A735013A4D19800850912 /* NSDictionary_JSONExtensions.h */,
-				0A1A735113A4D19800850912 /* NSDictionary_JSONExtensions.m */,
-				0A1A735213A4D19800850912 /* CJSONDeserializer.h */,
-				0A1A735313A4D19800850912 /* CJSONDeserializer.m */,
-				0A1A735413A4D19800850912 /* CJSONScanner.h */,
-				0A1A735513A4D19800850912 /* CJSONScanner.m */,
-				0A1A735613A4D19800850912 /* CJSONSerializer.h */,
-				0A1A735713A4D19800850912 /* CJSONSerializer.m */,
-				0A1A735813A4D19800850912 /* JSONRepresentation.h */,
-			);
-			name = TouchJSON;
 			sourceTree = "<group>";
 		};
 		0A1A733F13A4D14500850912 /* TouchFoundation */ = {
@@ -319,6 +283,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0A5FF58913A7C2610087D7FD /* CouchAppManager.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -385,8 +350,9 @@
 				0A1A732B13A4D09F00850912 /* AppDelegate.h in Resources */,
 				0A1A733013A4D09F00850912 /* README in Resources */,
 				0A1A733713A4D0E100850912 /* www in Resources */,
-				0A1A733C13A4D11F00850912 /* mycouchapp.json in Resources */,
 				0A1A734413A4D17500850912 /* Couchbase.bundle in Resources */,
+				0A5FF58513A7C0C70087D7FD /* mycouchapp.json in Resources */,
+				0A5FF58613A7C0C70087D7FD /* mycouchapp.version in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -415,15 +381,9 @@
 			files = (
 				0A1A731513A4D09F00850912 /* main.m in Sources */,
 				0A1A732D13A4D09F00850912 /* AppDelegate.m in Sources */,
-				0A1A733A13A4D0F400850912 /* CouchAppManager.m in Sources */,
 				0A1A734A13A4D18800850912 /* Base64Transcoder.c in Sources */,
 				0A1A734B13A4D18800850912 /* NSData_Base64Extensions.m in Sources */,
-				0A1A735913A4D19800850912 /* CDataScanner.m in Sources */,
-				0A1A735A13A4D19800850912 /* CDataScanner_Extensions.m in Sources */,
-				0A1A735B13A4D19800850912 /* NSDictionary_JSONExtensions.m in Sources */,
-				0A1A735C13A4D19800850912 /* CJSONDeserializer.m in Sources */,
-				0A1A735D13A4D19800850912 /* CJSONScanner.m in Sources */,
-				0A1A735E13A4D19800850912 /* CJSONSerializer.m in Sources */,
+				0A5FF58A13A7C2610087D7FD /* CouchAppManager.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

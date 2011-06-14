@@ -2,7 +2,7 @@
 //  CouchAppManager.m
 //  None
 //
-//  Created by XMann on 6/11/11.
+//  Created by Kevin Malakoff on 6/11/11.
 //  Copyright 2011 None.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -19,23 +19,22 @@
 
 #import "CouchAppManager.h"
 #import "NSData_Base64Extensions.h"             // for asBase64EncodedString for authenticaton
-#import "CJSONDeserializer.h"                   // for parsing server responses
-#import "CJSONSerializer.h"                     // for cleaning up the couch app fields for PUT
 
 NSString * const CONTENT_TYPE_JSON              = @"application/json";
 NSString * const CONTENT_TYPE_FORM              = @"multipart/form-data";
 NSString * const COUCHAPP_LOADED_VERSION_DOC    = @"loaded_couchapp_version";
 NSString * const COUCHAPP_LOADED_VERSION_FIELD  = @"loaded_rev";
-#define RESPONSE_DICTIONARY_DB_EXISTS(dict)     ([dict objectForKey:@"db_name"] != nil)
-#define RESPONSE_DICTIONARY_DOC_EXISTS(dict)    ([dict objectForKey:@"_id"] != nil)
-#define RESPONSE_DICTIONARY_OK(dict)            ([dict objectForKey:@"ok"] != nil)
+#define RESPONSE_DATA_OK(data)                  ([self responseDataHasFieldAndValue:data field:@"ok" value:@"true"])
+#define RESPONSE_DATA_DB_EXISTS(data)           ([self responseDataHasField:data field:@"db_name"])
+#define RESPONSE_DATA_DOC_EXISTS(data)          ([self responseDataHasField:data field:@"_id"])
 
 @implementation CouchAppManager
 
 @synthesize couchbaseServerURL;
-@synthesize couchappServerCredential;
 @synthesize couchappDatabaseName;
 @synthesize couchappDocumentName;
+
+@synthesize _credentialString;
 
 ///////////////////////
 // Public Interface
@@ -54,86 +53,45 @@ NSString * const COUCHAPP_LOADED_VERSION_FIELD  = @"loaded_rev";
     return self;
 }
 
--(void)loadNewAppVersion:(NSString*)newVersionOverride getAppAsJSONData_PassOwnershipBlock:(NSData* (^)())getAppAsJSONData_PassOwnershipBlock
+-(void)loadNewAppVersion:(NSString*)newVersion getAppAsJSONDataBlock:(NSData* (^)())getAppAsJSONDataBlock
 {
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
     [self ensureAppDatabaseExists];
 
-    NSMutableDictionary *appJSONMutableDictionary = nil;
-    NSString *newVersion = newVersionOverride;
-    
-    // the app should exist
+    // no change so do not upload
     NSString *currentVersion = [self getCurrentAppVersion];
-    if(currentVersion)
+    if(currentVersion && newVersion && ([currentVersion compare:newVersion] == NSOrderedSame))
     {
-        // no version supplied, use the _rev field
-        if(!newVersion)
-        {
-            appJSONMutableDictionary = [self getAppAsJSONMutableDictionary:getAppAsJSONData_PassOwnershipBlock];
-            newVersion = [appJSONMutableDictionary valueForKey:@"_rev"];
-            if(!newVersion)
-                NSLog(@"Missing _rev parameter on the app being loaded");
-        }
-        
-        // check for a change in the rev
-        if(currentVersion && newVersion && ([currentVersion compare:newVersion] == NSOrderedSame) )
-        {
-            // no change so do not upload
-            [pool release];
-            return;
-        }
+        // no change so do not upload
+        [pool release];
+        return;
     }
     
     NSString *documentURL = [self urlToAppDocument];
-    BOOL appExists;
-    BOOL success = NO;
+    NSData *responseData;
     
     /////////////////////////
-    // check existence of app - GET
+    // check existence of app - HEAD and if it does, DELETE it before update
+    // NOTE: this is to avoid having to update the provided couchapp with the _rev parameter from the existing app 
     /////////////////////////
-    
-    // get the data if haven't already
-    if(!appJSONMutableDictionary)
-        appJSONMutableDictionary = [self getAppAsJSONMutableDictionary:getAppAsJSONData_PassOwnershipBlock];
 
-    // TODO: fix this to use HEAD so the full couch app doesn't need to be sent. For some reason HEAD gives HTTP code 500: "Badarg error in HTTP request"
-    //NSDictionary *headerFieldsDictionary = [self serverHTTPRequestWithJSONResponse_HeaderFields:documentURL httpMethod:@"HEAD"];
-    //NSString *_revCurrent = headerFieldsDictionary ? [headerFieldsDictionary valueForKey:@"Etag"] : nil; 
-    NSDictionary *headerFieldsDictionary = [self serverHTTPRequestWithJSONResponse:documentURL httpMethod:@"GET"];
-    NSString *_revCurrent = headerFieldsDictionary ? [headerFieldsDictionary valueForKey:@"_rev"] : nil; 
-    appExists = (_revCurrent != nil); 
+    // get the current revision if app exists
+    NSHTTPURLResponse *response = nil;
+    [self serverHTTPRequest:documentURL httpMethod:@"HEAD" response:&response];
+    NSString *_revCurrent = response ? [[response allHeaderFields] valueForKey:@"Etag"] : nil; 
+
+    // delete the current app
+    if(_revCurrent)
+        [self serverHTTPRequest_DeleteDocument:documentURL _revCurrent:_revCurrent];
     
-    // update the app
-    if(appExists)
-    {
-        // update
-        NSDictionary *responseJSONDictionary = [self serverHTTPRequestWithJSONResponse_UpdateDocument:documentURL dataJSONMutableDictionary:appJSONMutableDictionary _revCurrent:_revCurrent];
-        success = RESPONSE_DICTIONARY_OK(responseJSONDictionary);
-        if(!success)
-            NSLog(@"Failed to update the couch app at URL: %@", documentURL);
-    }
-    
-    // create the app
-    else
-    {
-        // create
-        NSDictionary *responseJSONDictionary = [self serverHTTPRequestWithJSONResponse_CreateDocument:documentURL dataJSONMutableDictionary:appJSONMutableDictionary];
-        success = RESPONSE_DICTIONARY_OK(responseJSONDictionary);
-        if(!success)
-            NSLog(@"Failed to create the couch app at URL: %@", documentURL);
-    }
+    // create
+    responseData = [self serverHTTPRequest:documentURL httpMethod:@"PUT" data:getAppAsJSONDataBlock() contentType:CONTENT_TYPE_FORM response:nil];
+    if(!RESPONSE_DATA_OK(responseData))
+        NSLog(@"Failed to create the couch app at URL: %@", documentURL);
 
     // update the version -> if there is no revision, skip and it will be loaded again next time
-    if(success)
-    {
-        if(!newVersion)
-        {
-            newVersion = [appJSONMutableDictionary valueForKey:@"_rev"];
-            if(!newVersion)
-                NSLog(@"Missing _rev parameter on the app being loaded");
-        }
+    else
         [self setCurrentAppVersion:newVersion];
-    }
     [pool release];
 }
 
@@ -144,102 +102,111 @@ NSString * const COUCHAPP_LOADED_VERSION_FIELD  = @"loaded_rev";
     [couchappApgeURL release];
 }
 
+-(NSURLCredential*)couchappServerCredential
+{
+    return couchappServerCredential;
+}
+
+-(void)setCouchappServerCredential:(NSURLCredential*)inCredential
+{
+    [inCredential retain];
+    
+    if(couchappServerCredential)
+        [couchappServerCredential release];
+    
+    couchappServerCredential = inCredential;
+
+    if(couchappServerCredential)
+    {
+        NSString *tempString = [[NSString alloc] initWithFormat:@"%@:%@", couchappServerCredential.user, couchappServerCredential.password];
+        NSData *credentialData = [tempString dataUsingEncoding:NSUTF8StringEncoding];
+        [tempString release];
+        tempString = [credentialData asBase64EncodedString:0];
+        _credentialString = [[NSString alloc] initWithFormat:@"Basic %@", tempString];
+    }
+    else
+    {
+        [_credentialString release];
+        _credentialString = nil;
+    }
+}
+
+
 ///////////////////////
 // Internal Flow
 ///////////////////////
 -(BOOL)ensureAppDatabaseExists
 {
     NSString *databaseURL = [self urlToAppDatabase];
-    NSDictionary *responseJSONDictionary;
+    NSData *responseData;
     
     /////////////////////////
     // check existence - GET
     /////////////////////////
-    responseJSONDictionary = [self serverHTTPRequestWithJSONResponse:databaseURL httpMethod:@"GET"];
+    responseData = [self serverHTTPRequest:databaseURL httpMethod:@"GET" response:nil];
     
     // failed to connect to server or parse response
-    if(!responseJSONDictionary) 
+    if(!responseData) 
+    {
+        NSLog(@"Failed to connect to the server at: %@", databaseURL);
         return NO;
+    }
     
     // the DB exists
-    if(RESPONSE_DICTIONARY_DB_EXISTS(responseJSONDictionary))
+    if(RESPONSE_DATA_DB_EXISTS(responseData))
         return YES;
     
     /////////////////////////
     // doesn't exist so create - PUT
     /////////////////////////
-    responseJSONDictionary = [self serverHTTPRequestWithJSONResponse:databaseURL httpMethod:@"PUT"];
-    return RESPONSE_DICTIONARY_OK(responseJSONDictionary);
-}
-
--(NSMutableDictionary*)getAppAsJSONMutableDictionary:(NSData* (^)())getAppAsJSONData_PassOwnershipBlock
-{
-    NSData *appData = getAppAsJSONData_PassOwnershipBlock();
-    CJSONDeserializer *deserializer = [[CJSONDeserializer alloc] init];
-    deserializer.options = kJSONDeserializationOptions_MutableContainers;
-
-    NSError *error;
-    NSMutableDictionary *appJSONMutableDictionary = [deserializer deserializeAsDictionary:appData error:&error];
-    [appData release]; appData = nil;
-    [deserializer release]; deserializer = nil;
-    
-    return appJSONMutableDictionary;
+    responseData = [self serverHTTPRequest:databaseURL httpMethod:@"PUT" response:nil];
+    return RESPONSE_DATA_OK(responseData);
 }
 
 -(NSString*)getCurrentAppVersion
 {
     NSString *documentURL = [self urlToAppLoadedVerionDocument];
-    NSDictionary *responseJSONDictionary;
+    NSData *responseData;
     
     /////////////////////////
     // check existence - GET
     /////////////////////////
-    responseJSONDictionary = [self serverHTTPRequestWithJSONResponse:documentURL httpMethod:@"GET"];
+    responseData = [self serverHTTPRequest:documentURL httpMethod:@"GET" response:nil];
     
     // failed to connect to server or parse response
-    if(!responseJSONDictionary) 
+    if(!responseData) 
         return nil;
-    
+
     // get the key field key
-    return RESPONSE_DICTIONARY_DOC_EXISTS(responseJSONDictionary)? [responseJSONDictionary valueForKey:COUCHAPP_LOADED_VERSION_FIELD] : nil;
+    return RESPONSE_DATA_DOC_EXISTS(responseData)? [self responseDataExtractSimpleValue:responseData field:COUCHAPP_LOADED_VERSION_FIELD] : nil;
 }
 
 -(void)setCurrentAppVersion:(NSString*)version
 {
     NSString *documentURL = [self urlToAppLoadedVerionDocument];
-    NSDictionary *responseJSONDictionary;
+    NSData *responseData;
     
     /////////////////////////
     // check existence - GET
     /////////////////////////
-    responseJSONDictionary = [self serverHTTPRequestWithJSONResponse:documentURL httpMethod:@"GET"];
-    BOOL versionExists = RESPONSE_DICTIONARY_DOC_EXISTS(responseJSONDictionary);
+    responseData = [self serverHTTPRequest:documentURL httpMethod:@"GET" response:nil];
     
-    // exists, update
-    if(versionExists)
+    // exists, delete
+    if(RESPONSE_DATA_DOC_EXISTS(responseData))
     {
-        NSString *_revCurrent = [responseJSONDictionary valueForKey:@"_rev"];
-        NSMutableDictionary *dataJSONMutableDictionary = [responseJSONDictionary mutableCopy];
-        
-        // update the version
-        [dataJSONMutableDictionary setValue:version forKey:COUCHAPP_LOADED_VERSION_FIELD];
-        
-        // update
-        responseJSONDictionary = [self serverHTTPRequestWithJSONResponse_UpdateDocument:documentURL dataJSONMutableDictionary:dataJSONMutableDictionary _revCurrent:_revCurrent];
-        if(!RESPONSE_DICTIONARY_OK(responseJSONDictionary))
-            NSLog(@"Failed to update the couch app version document at URL: %@", documentURL);
+        NSString *_revCurrent = [self responseDataExtractSimpleValue:responseData field:@"_rev"];
+        [self serverHTTPRequest_DeleteDocument:documentURL _revCurrent:_revCurrent];
     }
     
-    // doesn't exist, create
-    else
-    {
-        NSMutableDictionary *dataJSONMutableDictionary = [NSMutableDictionary dictionaryWithObject:version forKey:COUCHAPP_LOADED_VERSION_FIELD];
-        
-        // create
-        responseJSONDictionary = [self serverHTTPRequestWithJSONResponse_CreateDocument:documentURL dataJSONMutableDictionary:dataJSONMutableDictionary];
-        if(!RESPONSE_DICTIONARY_OK(responseJSONDictionary))
-            NSLog(@"Failed to create the couch app version document at URL: %@", documentURL);
-    }
+    NSString *versionDocument = [[NSString alloc] initWithFormat:@"{\"%@\":\"%@\"}", COUCHAPP_LOADED_VERSION_FIELD, version];
+    NSData *versionData = [versionDocument dataUsingEncoding:NSUTF8StringEncoding];
+    
+    // create
+    responseData = [self serverHTTPRequest:documentURL httpMethod:@"PUT" data:versionData contentType:CONTENT_TYPE_FORM response:nil];
+    if(!RESPONSE_DATA_OK(responseData))
+        NSLog(@"Failed to create the couch app version document at URL: %@", documentURL);
+    
+    [versionDocument release];
 }
 
 ///////////////////////
@@ -263,39 +230,16 @@ NSString * const COUCHAPP_LOADED_VERSION_FIELD  = @"loaded_rev";
 ///////////////////////
 // HTTP Helpers
 ///////////////////////
--(NSDictionary*)serverHTTPRequestWithJSONResponse_HeaderFields:(NSString*)urlString httpMethod:(NSString*)httpMethod
+-(NSData*)serverHTTPRequest:(NSString*)urlString httpMethod:(NSString*)httpMethod response:(NSHTTPURLResponse**)response;
 {
-    NSMutableURLRequest *    request = [[NSMutableURLRequest alloc] init];
-    [request setHTTPMethod:httpMethod];
-    [self requestAddURLString:request urlString:urlString];
-    [self requestAddCredential:request];
-    
-    NSError *error;
-    NSHTTPURLResponse *response;
-    
-    // check the couch server for the database
-    error = nil;
-    [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:&error];
-//    [request release];
-    if (error)
-    {
-        NSLog(@"Error: %@ \nFor request: %@",[error localizedDescription], [[request URL] absoluteString]);
-        return nil;
-    }
-    
-    return [response allHeaderFields];
-}
-    
--(NSDictionary*)serverHTTPRequestWithJSONResponse:(NSString*)urlString httpMethod:(NSString*)httpMethod
-{
-    return [self serverHTTPRequestWithJSONResponse:urlString httpMethod:httpMethod data:nil contentType:nil];
+    return [self serverHTTPRequest:urlString httpMethod:httpMethod data:nil contentType:nil response:response];
 }
 
--(NSDictionary*)serverHTTPRequestWithJSONResponse:(NSString*)urlString httpMethod:(NSString*)httpMethod data:(NSData*)data contentType:(NSString*)contentType
+-(NSData*)serverHTTPRequest:(NSString*)urlString httpMethod:(NSString*)httpMethod data:(NSData*)data contentType:(NSString*)contentType response:(NSHTTPURLResponse**)response
 {
     NSMutableURLRequest *    request = [[NSMutableURLRequest alloc] init];
     [request setHTTPMethod:httpMethod];
-    [request setValue:@"application/json" forHTTPHeaderField:@"Accept"];
+    [request setValue:CONTENT_TYPE_JSON forHTTPHeaderField:@"Accept"];
     [self requestAddURLString:request urlString:urlString];
     [self requestAddCredential:request];
     
@@ -307,13 +251,10 @@ NSString * const COUCHAPP_LOADED_VERSION_FIELD  = @"loaded_rev";
         [request setValue:[NSString stringWithFormat:@"%d", [data length]] forHTTPHeaderField:@"Content-Length"];
         [request setHTTPBody:data];
     }
-    
-    NSError *error;
-    
+
     // check the couch server for the database
-    error = nil;
-    NSHTTPURLResponse *response;
-    NSData *responseData = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:&error];
+    NSError *error = nil;
+    NSData *responseData = [NSURLConnection sendSynchronousRequest:request returningResponse:response error:&error];
     //    [request release];
     if (error)
     {
@@ -321,41 +262,20 @@ NSString * const COUCHAPP_LOADED_VERSION_FIELD  = @"loaded_rev";
         return nil;
     }
     
-    // parse the response
-    error = nil;
-    NSDictionary *responseJSONDictionary = [[CJSONDeserializer deserializer] deserializeAsDictionary:responseData error:&error];
-    if (error || [responseJSONDictionary isKindOfClass: [NSDictionary class]] == NO )
+    return responseData;
+}
+-(BOOL)serverHTTPRequest_DeleteDocument:(NSString*)urlString _revCurrent:(NSString*)_revCurrent
+{
+    // generate the URL including the rev parameter (removing the quotes)
+    NSString *documentURLDelete = [NSString stringWithFormat:@"%@?rev=%@", urlString, [_revCurrent stringByReplacingOccurrencesOfString:@"\"" withString: @""]];
+    NSData *responseData = [self serverHTTPRequest:documentURLDelete httpMethod:@"DELETE" response:nil];
+    if(!RESPONSE_DATA_OK(responseData))
     {
-        NSLog(@"Error: %@ \nFor server response: %@",[error localizedDescription], [NSString stringWithUTF8String:[responseData bytes]]);
-        return nil;
+        NSLog(@"Failed to delete the at URL: %@", documentURLDelete);
+        return NO;
     }
     
-    return responseJSONDictionary;
-}
-
--(NSDictionary*)serverHTTPRequestWithJSONResponse_CreateDocument:(NSString*)urlString dataJSONMutableDictionary:(NSMutableDictionary*)dataJSONMutableDictionary
-{
-    // remove _id and _rev fields
-    [dataJSONMutableDictionary removeObjectsForKeys:[NSArray arrayWithObjects:@"_id", @"_rev", nil]];
-    
-    // PUT to create
-    NSError *error;
-    NSData *data = [[CJSONSerializer serializer] serializeDictionary:dataJSONMutableDictionary error:&error];
-    return [self serverHTTPRequestWithJSONResponse:urlString httpMethod:@"PUT" data:data contentType:CONTENT_TYPE_FORM];
-}
-
--(NSDictionary*)serverHTTPRequestWithJSONResponse_UpdateDocument:(NSString*)urlString dataJSONMutableDictionary:(NSMutableDictionary*)dataJSONMutableDictionary _revCurrent:(NSString*)_revCurrent;
-{
-    // remove _id and _rev fields
-    [dataJSONMutableDictionary removeObjectsForKeys:[NSArray arrayWithObjects:@"_id", @"_rev", nil]];
-    
-    // add the previous _rev field -> when updating, you need to send what should be the current _rev
-    [dataJSONMutableDictionary setValue:_revCurrent forKey:@"_rev"];
-    
-    // PUT to update
-    NSError *error;
-    NSData *data = [[CJSONSerializer serializer] serializeDictionary:dataJSONMutableDictionary error:&error];
-    return [self serverHTTPRequestWithJSONResponse:urlString httpMethod:@"PUT" data:data contentType:CONTENT_TYPE_JSON];
+    return YES;
 }
 
 -(void)requestAddURLString:(NSMutableURLRequest*)request urlString:(NSString*)urlString
@@ -366,15 +286,104 @@ NSString * const COUCHAPP_LOADED_VERSION_FIELD  = @"loaded_rev";
 
 -(void)requestAddCredential:(NSMutableURLRequest*)request
 {
-    NSString *theValue = [NSString stringWithFormat:@"%@:%@", self.couchappServerCredential.user, self.couchappServerCredential.password];
-    NSData *theData = [theValue dataUsingEncoding:NSUTF8StringEncoding];
-    theValue = [theData asBase64EncodedString:0];
-    theValue = [NSString stringWithFormat:@"Basic %@", theValue];
-    [request setValue:theValue forHTTPHeaderField:@"Authorization"];
+    if(_credentialString)
+        [request setValue:_credentialString forHTTPHeaderField:@"Authorization"];
+}
+
+-(BOOL)responseDataHasFieldAndValue:(NSData*)responseData field:(NSString*)field value:(NSString*)value
+{
+    NSString *valueString = [self responseDataExtractSimpleValue:responseData field:field];
+    return (valueString && ([valueString compare:value] == NSOrderedSame));
+}
+
+-(BOOL)responseDataHasField:(NSData*)responseData field:(NSString*)field
+{
+    NSString *responseDataAsString = [[NSString alloc] initWithData:responseData encoding:NSUTF8StringEncoding];
+    NSUInteger responseDataAsStringLength = [responseDataAsString length];
+    
+    NSString *regexPattern = [[NSString alloc] initWithFormat:@"\"%@\"( )*:", field];
+    NSRegularExpression *fieldRegex = [[NSRegularExpression alloc] initWithPattern:regexPattern options:0 error:nil];
+    [regexPattern release];
+    NSTextCheckingResult *fieldMatch = [fieldRegex firstMatchInString:responseDataAsString options:0 range:NSMakeRange(0, responseDataAsStringLength)];
+    [fieldRegex release];
+
+    [responseDataAsString release];
+    return (fieldMatch != nil);
+}
+
+// this is not robust -> the "field" should only occur once and the value should be a simple value (',' or '}')
+-(NSString*)responseDataExtractSimpleValue:(NSData*)responseData field:(NSString*)field
+{
+    NSString *valueString = nil;
+    NSString *responseDataAsString = [[NSString alloc] initWithData:responseData encoding:NSUTF8StringEncoding];
+    NSUInteger responseDataAsStringLength = [responseDataAsString length];
+    
+    NSString *regexPattern = [[NSString alloc] initWithFormat:@"\"%@\"( )*:", field];
+    NSRegularExpression *fieldRegex = [[NSRegularExpression alloc] initWithPattern:regexPattern options:0 error:nil];
+    [regexPattern release];
+    NSTextCheckingResult *fieldMatch = [fieldRegex firstMatchInString:responseDataAsString options:0 range:NSMakeRange(0, responseDataAsStringLength)];
+    [fieldRegex release];
+    
+    // found the field
+    if(fieldMatch)
+    {
+        NSRange fieldMatchRange = [fieldMatch range];
+        NSUInteger fieldColonOffset = fieldMatchRange.location + fieldMatchRange.length;
+        
+        NSCharacterSet *fieldEndDelimiters = [NSCharacterSet characterSetWithCharactersInString:@"\\},"]; 
+        NSRange valueMatchRange = [responseDataAsString rangeOfCharacterFromSet:fieldEndDelimiters options:0 range:NSMakeRange(fieldColonOffset, responseDataAsStringLength - fieldColonOffset)];
+
+        // found the value
+        if(valueMatchRange.length>0)
+        {
+            valueMatchRange.length = valueMatchRange.location - fieldColonOffset;       // drop the , or }
+            valueMatchRange.location = fieldColonOffset;
+            valueMatchRange = [self valueClean:responseDataAsString range:valueMatchRange];
+            
+            valueString = [responseDataAsString substringWithRange:valueMatchRange];
+        }
+    }
+
+    [responseDataAsString release];
+    return valueString;
+}
+
+///////////////////////
+// Misc Helpers
+///////////////////////
+-(NSRange)valueClean:(NSString*)valueString range:(NSRange)range
+{
+    NSRange cleanRange = range;
+    
+    // remove leading space
+    while([valueString characterAtIndex:cleanRange.location]==' ')
+    {
+        cleanRange.location++;
+        cleanRange.length--;
+    }
+    
+    // remove leading quote
+    if([valueString characterAtIndex:cleanRange.location]=='"')
+    {
+        cleanRange.location++;
+        cleanRange.length--;
+    }
+
+    // remove trailling space
+    while([valueString characterAtIndex:cleanRange.location+cleanRange.length-1]==' ')
+        cleanRange.length--;
+    
+    // remove trailing quote
+    if([valueString characterAtIndex:cleanRange.location+cleanRange.length-1]=='"')
+        cleanRange.length--;
+    
+    return cleanRange;
 }
 
 - (void)dealloc
 {
+    [_credentialString release];
+
 	[couchbaseServerURL release];
 	[couchappServerCredential release];
 	[couchappDatabaseName release];
