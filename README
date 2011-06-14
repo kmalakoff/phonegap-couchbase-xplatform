@@ -39,17 +39,33 @@ Sample Code:
   a) Load the CouchApp into a desktop/laptop/cloud CouchDB. For example: 
      couchapp autopush http://127.0.0.1:5984/mycouchapp_db
 
-  b) When you are happy with the CouchApp, serialize it and put it in the Resources XCode project directory. For example: 
+  Note: don't forget the first time to run plain old 'push' like:
+     couchapp push http://127.0.0.1:5984/mycouchapp_db
+
+  b) When you are happy with the CouchApp, serialize it and don't forget to put it in the Resources XCode project directory. 
+
+  Note: you must remove the "_id" and "_rev" fields from the exported file - you can do it by hand or use the couchapp-bundler gem.
+
+  By hand:
+
      cd phonegap-couchbase-xplatform/phonegap-couchbase-ios/phonegap-couchbase-ios/Resources
      curl -X GET http://127.0.0.1:5984/mycouchapp_db/_design/mycouchapp?attachments=true > mycouchapp.json
+     Then edit mycouchapp.json to remove the "_id" and "_rev" fields.
 
-  c) Then build and run in XCode. 
+  By using couchapp-bundler:
 
+     cd phonegap-couchbase-xplatform/phonegap-couchbase-ios/phonegap-couchbase-ios/Resources
+     couchapp-bundler -d mycouchapp -o mycouchapp 
+
+
+For example: 
+
+  c) Make sure the file is added to the resource directory in your project. Then build and run in XCode. 
 
 Notes:
 - doesn't use Trundle to try to keep it minimal.
-- currently bundled with minimal Vendor Source (Couchbase, TouchFoundation, TouchJSON). The TouchJSON could be moved over to use a compiled library if needed.
-- currently the library is written to use synchronous HTTP calls to keep the program flow simple. You can use Grand Central Dispatch to put it on a background thread.
+- currently bundled with minimal Vendor Source (Couchbase, TouchFoundation).
+- currently the library is written to use synchronous HTTP calls to keep the program flow simple. You can use Grand Central Dispatch (GCD) to put it on a background thread.
 
 Troubleshooting:
 1) If you want to run it on a physical device:
@@ -71,6 +87,10 @@ plist...Select your project in the left side panel, then select your
 TARGET, then choose the "Build Phases" tab, open "Copy Bundle 
 Resources", select your App plist, press '-' to delete. 
 
+5) If you app doesn't load, make sure you removed the "_id" and "_rev" fields, and that you added it as a resource in your XCode project.
+
+6) If you are having build issues, make sure you have included in your project what you need from the Vendor directory.
+
 Good luck!
 
-Xmann
+Kevin
