@@ -46,13 +46,17 @@ Sample Code:
 
   Note: you must remove the "_id" and "_rev" fields from the exported file - you can do it by hand or use the couchapp-bundler gem.
 
-  By hand:
+  By hand (the hard way!):
 
      cd phonegap-couchbase-xplatform/phonegap-couchbase-ios/phonegap-couchbase-ios/Resources
      curl -X GET http://127.0.0.1:5984/mycouchapp_db/_design/mycouchapp?attachments=true > mycouchapp.json
      Then edit mycouchapp.json to remove the "_id" and "_rev" fields.
 
-  By using couchapp-bundler:
+  By using couchapp-bundler (install):
+
+     gem install couchapp-bundler
+
+  By using couchapp-bundler (run):
 
      cd phonegap-couchbase-xplatform/phonegap-couchbase-ios/phonegap-couchbase-ios/Resources
      couchapp-bundler -d mycouchapp -o mycouchapp 
