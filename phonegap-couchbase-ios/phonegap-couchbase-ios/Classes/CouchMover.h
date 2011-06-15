@@ -1,6 +1,6 @@
 //
-//  CouchAppManager.h
-//  CouchAppManager
+//  CouchMover.h
+//  CouchMover
 //
 //  Created by Kevin Malakoff on 6/11/11.
 //  Copyright 2011 None.
@@ -19,42 +19,41 @@
 
 #import <Foundation/Foundation.h>
 
-@interface CouchAppManager : NSObject {
-	NSURL* couchbaseServerURL;                      // pass the URL from "CouchbaseDelegate couchbaseDidStart"
+@interface CouchMover : NSObject {
+	NSURL* serverURL;                      // pass the URL from "CouchbaseDelegate couchbaseDidStart"
     NSURLCredential *couchappServerCredential;      // required for authorization
-    NSString* couchappDatabaseName;                 // should be in the form of "mydatabase"
-    NSString* couchappDocumentName;                 // should be in the form of "myapp"
+    NSString* databaseName;                 // should be in the form of "mydatabase"
     
     NSString* _credentialString;
 }
 
-@property (copy, readwrite) NSURL* couchbaseServerURL;
+@property (copy, readwrite) NSURL* serverURL;
 @property (copy, readwrite) NSURLCredential *couchappServerCredential;
-@property (copy, readwrite) NSString* couchappDatabaseName;
-@property (copy, readwrite) NSString* couchappDocumentName;
+@property (copy, readwrite) NSString* databaseName;
 
 @property (copy, readonly) NSString* _credentialString;
 
 ///////////////////////
 // Public Interface
 ///////////////////////
--(CouchAppManager*)init:(NSURL*)serverURL serverCredential:(NSURLCredential*)serverCredential databaseName:(NSString*)databaseName documentName:(NSString*)documentName; 
--(void)loadNewAppVersion:(NSString*)newVersion getAppAsJSONDataBlock:(NSData* (^)())getAppAsJSONDataBlock; // newVersionOverride allows for an optimization by the caller supplying a version string rather than parsing the appAsJSONString and using the _rev field (which is the default if newVersion is not supplied) 
--(void)gotoAppPage:(UIWebView*)webView page:(NSString*)page; 
+-(CouchMover*)init:(NSURL*)inServerURL serverCredential:(NSURLCredential*)inServerCredential databaseName:(NSString*)inDatabaseName; 
+-(BOOL)documentHasChanged:(NSString*)documentName version:(NSString*)version;           // for a couch app, pass the documentName in the format of @"_design/appname"
+-(void)loadDocument:(NSString*)documentName version:(NSString*)version getAppAsJSONDataBlock:(NSData* (^)())getAppAsJSONDataBlock;      // for a couch app, pass the documentName in the format of @"_design/appname"
+-(void)gotoAppPage:(NSString*)appDocumentName webView:(UIWebView*)webView page:(NSString*)page; 
 
 ///////////////////////
 // Internal Flow
 ///////////////////////
 -(BOOL)ensureAppDatabaseExists;
--(NSString*)getCurrentAppVersion;
--(void)setCurrentAppVersion:(NSString*)version;
+-(NSString*)getCurrentAppVersion:(NSString*)documentName;
+-(void)setCurrentAppVersion:(NSString*)documentName version:(NSString*)version;
 
 ///////////////////////
 // URL Helpers
 ///////////////////////
 -(NSString*)urlToAppDatabase;
--(NSString*)urlToAppDocument;
--(NSString*)urlToAppLoadedVerionDocument;
+-(NSString*)urlToAppDocument:(NSString*)documentName;
+-(NSString*)urlToLoadedDocumentVerionDocument:(NSString*)documentName;
 
 ///////////////////////
 // HTTP Helpers

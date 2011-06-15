@@ -1,6 +1,6 @@
 //
 //  main.m
-//  CouchAppManager
+//  couchMover
 //
 //  Created by Kevin Malakoff on 6/11/11.
 //  Copyright 2011 None.

@@ -1,6 +1,6 @@
 //
 //  AppDelegate.m
-//  CouchAppManager
+//  CouchMover
 //
 //  Created by Kevin Malakoff on 6/11/11.
 //  Copyright 2011 None.
@@ -33,7 +33,7 @@
     // TODO: how should user name and password be handled properly? 
     // For example, using the default user and password at initialization, and switching to the user and password selected by the actual user, and handling remote server connections.
     NSURLCredential *credential = [NSURLCredential credentialWithUser:@"admin" password:@"admin" persistence:NSURLCredentialPersistenceForSession];
-    CouchAppManager* couchAppManager = [[CouchAppManager alloc] init:serverURL serverCredential:credential databaseName:@"mycouchapp_db" documentName:@"mycouchapp"];
+    CouchMover* couchMover = [[CouchMover alloc] init:serverURL serverCredential:credential databaseName:@"mycouchapp_db"];
     
     // put on a background thread because currently the manager uses async HTTP calls
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,0), ^{
@@ -42,15 +42,15 @@
         NSString *appVersion = [NSString stringWithContentsOfFile:pathToAppVersion usedEncoding:nil error:nil]; 
         
         // load the coachapp if needed
-        [couchAppManager loadNewAppVersion:appVersion getAppAsJSONDataBlock:^(){
+        [couchMover loadDocument:@"_design/mycouchapp" version:appVersion getAppAsJSONDataBlock:^(){
             NSString *pathToApp = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"mycouchapp.json"];
             return (NSData*) [NSData dataWithContentsOfFile:pathToApp];
         }];
         
         // go back to the main thread because that is where the webview is
         dispatch_async(dispatch_get_main_queue(), ^{
-            [couchAppManager gotoAppPage:self.webView page:@"index.html"];
-            [couchAppManager release];
+            [couchMover gotoAppPage:@"_design/mycouchapp" webView:self.webView page:@"index.html"];
+            [couchMover release];
         });
     });
 } 

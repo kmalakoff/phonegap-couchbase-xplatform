@@ -41,8 +41,8 @@
 		0A59445A13A806F500402C46 /* NSData_Base64Extensions.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A59445613A806F500402C46 /* NSData_Base64Extensions.m */; };
 		0A5FF58513A7C0C70087D7FD /* mycouchapp.json in Resources */ = {isa = PBXBuildFile; fileRef = 0A5FF58313A7C0C70087D7FD /* mycouchapp.json */; };
 		0A5FF58613A7C0C70087D7FD /* mycouchapp.version in Resources */ = {isa = PBXBuildFile; fileRef = 0A5FF58413A7C0C70087D7FD /* mycouchapp.version */; };
-		0A5FF58913A7C2610087D7FD /* CouchAppManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A5FF58713A7C2610087D7FD /* CouchAppManager.h */; };
-		0A5FF58A13A7C2610087D7FD /* CouchAppManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A5FF58813A7C2610087D7FD /* CouchAppManager.m */; };
+		0A5FF58913A7C2610087D7FD /* CouchMover.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A5FF58713A7C2610087D7FD /* CouchMover.h */; };
+		0A5FF58A13A7C2610087D7FD /* CouchMover.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A5FF58813A7C2610087D7FD /* CouchMover.m */; };
 		0AC7E6FD13A6A1BA00CCB232 /* libCouchbase.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0AC7E6FC13A6A1BA00CCB232 /* libCouchbase.a */; };
 /* End PBXBuildFile section */
 
@@ -97,8 +97,8 @@
 		0A59445613A806F500402C46 /* NSData_Base64Extensions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NSData_Base64Extensions.m; path = Vendor/TouchFoundation_MinimalExtraction/NSData_Base64Extensions.m; sourceTree = "<group>"; };
 		0A5FF58313A7C0C70087D7FD /* mycouchapp.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = mycouchapp.json; path = Resources/mycouchapp.json; sourceTree = "<group>"; };
 		0A5FF58413A7C0C70087D7FD /* mycouchapp.version */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = mycouchapp.version; path = Resources/mycouchapp.version; sourceTree = "<group>"; };
-		0A5FF58713A7C2610087D7FD /* CouchAppManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CouchAppManager.h; path = Classes/CouchAppManager.h; sourceTree = "<group>"; };
-		0A5FF58813A7C2610087D7FD /* CouchAppManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CouchAppManager.m; path = Classes/CouchAppManager.m; sourceTree = "<group>"; };
+		0A5FF58713A7C2610087D7FD /* CouchMover.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CouchMover.h; path = Classes/CouchMover.h; sourceTree = "<group>"; };
+		0A5FF58813A7C2610087D7FD /* CouchMover.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CouchMover.m; path = Classes/CouchMover.m; sourceTree = "<group>"; };
 		0AC7E6FC13A6A1BA00CCB232 /* libCouchbase.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libCouchbase.a; path = "phonegap-couchbase-ios/Vendor/Couchbase/libCouchbase.a"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -236,8 +236,8 @@
 			children = (
 				0A1A732A13A4D09F00850912 /* AppDelegate.h */,
 				0A1A732C13A4D09F00850912 /* AppDelegate.m */,
-				0A5FF58713A7C2610087D7FD /* CouchAppManager.h */,
-				0A5FF58813A7C2610087D7FD /* CouchAppManager.m */,
+				0A5FF58713A7C2610087D7FD /* CouchMover.h */,
+				0A5FF58813A7C2610087D7FD /* CouchMover.m */,
 			);
 			name = Classes;
 			sourceTree = "<group>";
@@ -285,7 +285,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0A5FF58913A7C2610087D7FD /* CouchAppManager.h in Headers */,
+				0A5FF58913A7C2610087D7FD /* CouchMover.h in Headers */,
 				0A59445813A806F500402C46 /* Base64Transcoder.h in Headers */,
 				0A59445913A806F500402C46 /* NSData_Base64Extensions.h in Headers */,
 			);
@@ -385,7 +385,7 @@
 			files = (
 				0A1A731513A4D09F00850912 /* main.m in Sources */,
 				0A1A732D13A4D09F00850912 /* AppDelegate.m in Sources */,
-				0A5FF58A13A7C2610087D7FD /* CouchAppManager.m in Sources */,
+				0A5FF58A13A7C2610087D7FD /* CouchMover.m in Sources */,
 				0A59445713A806F500402C46 /* Base64Transcoder.c in Sources */,
 				0A59445A13A806F500402C46 /* NSData_Base64Extensions.m in Sources */,
 			);

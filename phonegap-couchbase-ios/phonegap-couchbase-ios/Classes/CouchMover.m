@@ -1,6 +1,6 @@
 //
-//  CouchAppManager.m
-//  CouchAppManager
+//  CouchMover.m
+//  CouchMover
 //
 //  Created by Kevin Malakoff on 6/11/11.
 //  Copyright 2011 None.
@@ -17,7 +17,7 @@
 // License for the specific language governing permissions and limitations under
 // the License.
 
-#import "CouchAppManager.h"
+#import "CouchMover.h"
 #import "NSData_Base64Extensions.h"             // for asBase64EncodedString for authenticaton
 
 NSString * const CONTENT_TYPE_JSON              = @"application/json";
@@ -28,46 +28,52 @@ NSString * const COUCHAPP_LOADED_VERSION_FIELD  = @"loaded_rev";
 #define RESPONSE_DATA_DB_EXISTS(data)           ([self responseDataHasField:data field:@"db_name"])
 #define RESPONSE_DATA_DOC_EXISTS(data)          ([self responseDataHasField:data field:@"_id"])
 
-@implementation CouchAppManager
+@implementation CouchMover
 
-@synthesize couchbaseServerURL;
-@synthesize couchappDatabaseName;
-@synthesize couchappDocumentName;
+@synthesize serverURL;
+@synthesize databaseName;
 
 @synthesize _credentialString;
 
 ///////////////////////
 // Public Interface
 ///////////////////////
--(CouchAppManager*)init:(NSURL*)serverURL serverCredential:(NSURLCredential*)serverCredential databaseName:(NSString*)databaseName documentName:(NSString*)documentName 
+-(CouchMover*)init:(NSURL*)inServerURL serverCredential:(NSURLCredential*)inServerCredential databaseName:(NSString*)inDatabaseName; 
 {
     self = [super init];
     if (self == nil)
         return nil;
     
-    self.couchbaseServerURL = serverURL;
-    self.couchappServerCredential = serverCredential;
-    self.couchappDatabaseName = databaseName;
-    self.couchappDocumentName = documentName;
+    self.serverURL = inServerURL;
+    self.couchappServerCredential = inServerCredential;
+    self.databaseName = inDatabaseName;
     
     return self;
 }
 
--(void)loadNewAppVersion:(NSString*)newVersion getAppAsJSONDataBlock:(NSData* (^)())getAppAsJSONDataBlock
+-(BOOL)documentHasChanged:(NSString*)documentName version:(NSString*)version
 {
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    // call this first because loadDocument calls this
     [self ensureAppDatabaseExists];
 
-    // no change so do not upload
-    NSString *currentVersion = [self getCurrentAppVersion];
-    if(currentVersion && newVersion && ([currentVersion compare:newVersion] == NSOrderedSame))
-    {
-        // no change so do not upload
-        [pool release];
-        return;
-    }
+    // no version so always load
+    if(!version)
+        return TRUE;
     
-    NSString *documentURL = [self urlToAppDocument];
+    // no change so do not upload
+    NSString *currentVersion = [self getCurrentAppVersion:documentName];
+    return(!currentVersion || ([currentVersion compare:version] != NSOrderedSame));
+}
+
+-(void)loadDocument:(NSString*)documentName version:(NSString*)version getAppAsJSONDataBlock:(NSData* (^)())getAppAsJSONDataBlock
+{
+    // no change in the document
+    if(![self documentHasChanged:documentName version:version])
+        return;
+    
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+
+    NSString *documentURL = [self urlToAppDocument:documentName];
     NSData *responseData;
     
     /////////////////////////
@@ -91,13 +97,13 @@ NSString * const COUCHAPP_LOADED_VERSION_FIELD  = @"loaded_rev";
 
     // update the version -> if there is no revision, skip and it will be loaded again next time
     else
-        [self setCurrentAppVersion:newVersion];
+        [self setCurrentAppVersion:documentName version:version];
     [pool release];
 }
 
--(void)gotoAppPage:(UIWebView*)webView page:(NSString*)page
+-(void)gotoAppPage:(NSString*)appDocumentName webView:(UIWebView*)webView page:(NSString*)page
 {
-    NSString *couchappApgeURL = [[NSString alloc] initWithFormat:@"window.location.href = \"%@/%@\"", [self urlToAppDocument], page];
+    NSString *couchappApgeURL = [[NSString alloc] initWithFormat:@"window.location.href = \"%@/%@\"", [self urlToAppDocument:appDocumentName], page];
     [webView stringByEvaluatingJavaScriptFromString:couchappApgeURL];
     [couchappApgeURL release];
 }
@@ -163,9 +169,9 @@ NSString * const COUCHAPP_LOADED_VERSION_FIELD  = @"loaded_rev";
     return RESPONSE_DATA_OK(responseData);
 }
 
--(NSString*)getCurrentAppVersion
+-(NSString*)getCurrentAppVersion:(NSString*)documentName
 {
-    NSString *documentURL = [self urlToAppLoadedVerionDocument];
+    NSString *documentURL = [self urlToLoadedDocumentVerionDocument:documentName];
     NSData *responseData;
     
     /////////////////////////
@@ -181,9 +187,9 @@ NSString * const COUCHAPP_LOADED_VERSION_FIELD  = @"loaded_rev";
     return RESPONSE_DATA_DOC_EXISTS(responseData)? [self responseDataExtractSimpleValue:responseData field:COUCHAPP_LOADED_VERSION_FIELD] : nil;
 }
 
--(void)setCurrentAppVersion:(NSString*)version
+-(void)setCurrentAppVersion:(NSString*)documentName version:(NSString*)version
 {
-    NSString *documentURL = [self urlToAppLoadedVerionDocument];
+    NSString *documentURL = [self urlToLoadedDocumentVerionDocument:documentName];
     NSData *responseData;
     
     /////////////////////////
@@ -214,17 +220,17 @@ NSString * const COUCHAPP_LOADED_VERSION_FIELD  = @"loaded_rev";
 ///////////////////////
 -(NSString*)urlToAppDatabase
 {
-    return [NSString stringWithFormat:@"%@%@", [self.couchbaseServerURL absoluteString], self.couchappDatabaseName];
+    return [NSString stringWithFormat:@"%@%@", [self.serverURL absoluteString], self.databaseName];
 }
 
--(NSString*)urlToAppDocument
+-(NSString*)urlToAppDocument:(NSString*)documentName
 {
-    return [NSString stringWithFormat:@"%@%@/_design/%@", [self.couchbaseServerURL absoluteString], self.couchappDatabaseName, self.couchappDocumentName];
+    return [NSString stringWithFormat:@"%@%@/%@", [self.serverURL absoluteString], self.databaseName, documentName];
 }
 
--(NSString*)urlToAppLoadedVerionDocument
+-(NSString*)urlToLoadedDocumentVerionDocument:(NSString*)documentName
 {
-    return [NSString stringWithFormat:@"%@%@/_design/%@_%@", [self.couchbaseServerURL absoluteString], self.couchappDatabaseName, self.couchappDocumentName, COUCHAPP_LOADED_VERSION_DOC];
+    return [NSString stringWithFormat:@"%@%@/%@_%@", [self.serverURL absoluteString], self.databaseName, documentName, COUCHAPP_LOADED_VERSION_DOC];
 }
 
 ///////////////////////
@@ -384,10 +390,9 @@ NSString * const COUCHAPP_LOADED_VERSION_FIELD  = @"loaded_rev";
 {
     [_credentialString release];
 
-	[couchbaseServerURL release];
+	[serverURL release];
 	[couchappServerCredential release];
-	[couchappDatabaseName release];
-	[couchappDocumentName release];
+	[databaseName release];
 	[super dealloc];
 }
 

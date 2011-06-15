@@ -1,6 +1,6 @@
 //
 //  AppDelegate.h
-//  CouchAppManager
+//  couchMover
 //
 //  Created by Kevin Malakoff on 6/11/11.
 //  Copyright 2011 None.
@@ -26,7 +26,7 @@
 
 // Couchbase changes START
 #import "Couchbase.h" 
-#import "CouchAppManager.h" 
+#import "couchMover.h" 
 
 @interface AppDelegate : PhoneGapDelegate<CouchbaseDelegate> {
 // Couchbase changes END
