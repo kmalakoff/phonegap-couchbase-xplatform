@@ -26,15 +26,62 @@ There is an objective-C class called CouchAppManager which handles:
 - loading of any CouchApp page URL
 
 Sample Code:
+**************
 
 1) See AppDelegate.h and AppDelegate.m for integration tips. All Couchbase code that is integrated into PhoneGap is labeled with:
 
 // Couchbase changes START
 // Couchbase changes END
 
-2) See AppDelegate.m couchbaseDidStart for a sample usage with _rev field based versioning. If you want to a avoid parsing the CouchApp to determine the version (for example, for release build), just pass a version string instead of nil to loadNewAppVersion:nil.
+2) The CouchMover class handles loading (or "moving") couch documents into CouchBase. It can be used for CouchApps or even initialization data. 
 
-3) The workflow to update the CouchApp is currently as follows:
+  --------------------------------
+  For example, for a couchapp:
+
+    NSURLCredential *credential = [NSURLCredential credentialWithUser:@"admin" password:@"admin" persistence:NSURLCredentialPersistenceForSession];
+    CouchMover* couchMover = [[CouchMover alloc] init:serverURL serverCredential:credential databaseName:@"mycouchapp_db"];
+  
+    NSString *pathToAppVersion = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"mycouchapp.version"];
+    NSString *appVersion = [NSString stringWithContentsOfFile:pathToAppVersion usedEncoding:nil error:nil]; 
+  
+    // load the coachapp if needed
+    [couchMover loadDocument:@"_design/mycouchapp" version:appVersion getAppAsJSONDataBlock:^(){
+        NSString *pathToApp = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"mycouchapp.json"];
+        return (NSData*) [NSData dataWithContentsOfFile:pathToApp];
+    }];
+  
+    [couchMover gotoAppPage:@"_design/mycouchapp" webView:self.webView page:@"index.html"];
+    [couchMover release];
+
+  --------------------------------
+  For example, to load a document:
+
+    NSURLCredential *credential = [NSURLCredential credentialWithUser:@"admin" password:@"admin" persistence:NSURLCredentialPersistenceForSession];
+    CouchMover* couchMover = [[CouchMover alloc] init:serverURL serverCredential:credential databaseName:@"mycouchdocument_db"];
+
+    NSString *pathToAppVersion = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"mycouchdocument.version"];
+    NSString *appVersion = [NSString stringWithContentsOfFile:pathToAppVersion usedEncoding:nil error:nil]; 
+
+    // load the coachdocument if needed
+    [couchMover loadDocument:@"mycouchdocument" version:appVersion getAppAsJSONDataBlock:^(){
+        NSString *pathToApp = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"mycouchdocument.json"];
+        return (NSData*) [NSData dataWithContentsOfFile:pathToApp];
+    }];
+
+    [couchMover gotoAppPage:@"mycouchdocument" webView:self.webView page:@"index.html"];
+    [couchMover release];
+
+
+3) In order to add CouchMover into your project, current you need to:
+
+  a) include the CouchMover files (CouchMover.h, CouchMover.m) 
+  
+  b) include the normal Couchbase files (Couchbase.bundle, Couchbase.h, libCouchbase.a) 
+  
+  c) include four files from TouchFoundation (Base64Transcoder.c, Base64Transcoder.h, NSData_Base64Extensions.h, NSData_Base64Extensions.m). This is for Base64 encoding for authentication - once Apple releases a standard implementation (and the project is updated) or if you link with TouchFoundation, you will no longer need these files. 
+
+
+4) The workflow to update the CouchApp is currently as follows:
 
   a) Load the CouchApp into a desktop/laptop/cloud CouchDB. For example: 
      couchapp autopush http://127.0.0.1:5984/mycouchapp_db
@@ -46,31 +93,35 @@ Sample Code:
 
   Note: you must remove the "_id" and "_rev" fields from the exported file - you can do it by hand or use the couchpack gem.
 
+  --------------------------------
   By hand (the hard way!):
 
      cd phonegap-couchbase-xplatform/phonegap-couchbase-ios/phonegap-couchbase-ios/Resources
      curl -X GET http://127.0.0.1:5984/mycouchapp_db/_design/mycouchapp?attachments=true > mycouchapp.json
      Then edit mycouchapp.json to remove the "_id" and "_rev" fields.
 
+  --------------------------------
   By using couchpack (install):
 
      gem install couchpack
 
+  --------------------------------
   By using couchpack (run):
 
      cd phonegap-couchbase-xplatform/phonegap-couchbase-ios/phonegap-couchbase-ios/Resources
      couchpack -d mycouchapp -a "_design/mycouchapp" -o mycouchapp 
 
-For example: 
 
   c) Make sure the file is added to the resource directory in your project. Then build and run in XCode. 
 
 Notes:
+**************
 - doesn't use Trundle to try to keep it minimal.
 - currently bundled with minimal Vendor Source (Couchbase, TouchFoundation).
 - currently the library is written to use synchronous HTTP calls to keep the program flow simple. You can use Grand Central Dispatch (GCD) to put it on a background thread.
 
 Troubleshooting:
+**************
 1) If you want to run it on a physical device:
 -> You need to apply for an appID and configure it using these instructions: http://wiki.phonegap.com/w/page/39991939/Getting-Started-with-PhoneGap-iOS-using-Xcode-4-(Template-Version)
 
