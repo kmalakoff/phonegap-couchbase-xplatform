@@ -22,7 +22,7 @@
 
 NSString * const CONTENT_TYPE_JSON              = @"application/json";
 NSString * const CONTENT_TYPE_FORM              = @"multipart/form-data";
-NSString * const COUCHAPP_LOADED_VERSION_DOC    = @"loaded_couchapp_version";
+NSString * const COUCHAPP_LOADED_VERSION_DOC    = @"loaded_version";
 NSString * const COUCHAPP_LOADED_VERSION_FIELD  = @"loaded_rev";
 #define RESPONSE_DATA_OK(data)                  ([self responseDataHasFieldAndValue:data field:@"ok" value:@"true"])
 #define RESPONSE_DATA_DB_EXISTS(data)           ([self responseDataHasField:data field:@"db_name"])
@@ -224,7 +224,7 @@ NSString * const COUCHAPP_LOADED_VERSION_FIELD  = @"loaded_rev";
 
 -(NSString*)urlToAppLoadedVerionDocument
 {
-    return [NSString stringWithFormat:@"%@%@/_design/%@", [self.couchbaseServerURL absoluteString], self.couchappDatabaseName, COUCHAPP_LOADED_VERSION_DOC];
+    return [NSString stringWithFormat:@"%@%@/_design/%@_%@", [self.couchbaseServerURL absoluteString], self.couchappDatabaseName, self.couchappDocumentName, COUCHAPP_LOADED_VERSION_DOC];
 }
 
 ///////////////////////
