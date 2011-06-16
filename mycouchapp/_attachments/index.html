@@ -5,13 +5,16 @@
 
     <meta http-equiv="Content-type" content="text/html; charset=utf-8">
 
+
 	<!-- iPad/iPhone specific css below, add after your main css >
 	<link rel="stylesheet" media="only screen and (max-device-width: 1024px)" href="ipad.css" type="text/css" />		
 	<link rel="stylesheet" media="only screen and (max-device-width: 480px)" href="iphone.css" type="text/css" />		
 	-->
 	<!-- If you application is targeting iOS BEFORE 4.0 you MUST put json2.js from http://www.JSON.org/json2.js into your www directory and include it here -->
+	<script type="text/javascript" charset="utf-8" src="jquery-1.6.1.min.js"></script>
+	<script type="text/javascript" charset="utf-8" src="jquery.couch.js"></script>
 	<script type="text/javascript" charset="utf-8" src="phonegap.0.9.5.1.min.js"></script>
-    <script type="text/javascript" charset="utf-8">
+  <script type="text/javascript" charset="utf-8">
 
 
 	// If you want to prevent dragging, uncomment this section
@@ -33,8 +36,33 @@
 	}
 	*/
 	
+	
+	
 	function onBodyLoad()
-	{		
+	{	
+    // NOTE: running from the filesystem gives an "Access-Control-Allow-Origin" error 
+	  if(window.location.host){
+	    
+	    // if the data isn't returned soon, give a message
+	    var data_retrieved = false;
+			setTimeout(function() {
+			  if(!data_retrieved)
+    		  $("h1#loaded_message").html("CouchApp failed to get data");
+			}, 3000 );
+
+      // NOTE: running from the filesystem gives an "Access-Control-Allow-Origin" error 
+      $.couch.urlPrefix = window.location.host? "http://" + window.location.host : "http://127.0.0.1:5984";
+
+      $.couch.db("mycouchapp_db").openDoc("mydata", { success: function(doc) {  
+        data_retrieved = true;
+    		$("h1#loaded_message").html(doc.message);
+      }});
+	  }
+
+	  // it is running from the filesystem
+	  else
+  		$("h1#loaded_message").html("CouchApp Sample running locally");
+
 		document.addEventListener("deviceready",onDeviceReady,false);
 	}
 	
@@ -49,6 +77,6 @@
     </script>
   </head>
   <body onload="onBodyLoad()">
-  	  <h1>CouchApp is Loaded!!</h1>
+  	  <h1 id="loaded_message"></h1>
   </body>
 </html>

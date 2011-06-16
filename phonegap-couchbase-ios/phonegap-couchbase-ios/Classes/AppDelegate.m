@@ -47,6 +47,15 @@
             return (NSData*) [NSData dataWithContentsOfFile:pathToApp];
         }];
         
+        NSString *pathToData = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"mydata.version"];
+        NSString *dataVersion = [NSString stringWithContentsOfFile:pathToData usedEncoding:nil error:nil]; 
+
+        // load some packaged data
+        [couchMover loadDocument:@"mydata" version:dataVersion getAppAsJSONDataBlock:^(){
+            NSString *pathToApp = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"mydata.json"];
+            return (NSData*) [NSData dataWithContentsOfFile:pathToApp];
+        }];
+
         // go back to the main thread because that is where the webview is
         dispatch_async(dispatch_get_main_queue(), ^{
             [couchMover gotoAppPage:@"_design/mycouchapp" webView:self.webView page:@"index.html"];
