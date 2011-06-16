@@ -65,11 +65,11 @@ NSString * const COUCHAPP_LOADED_VERSION_FIELD  = @"loaded_rev";
     return(!currentVersion || ([currentVersion compare:version] != NSOrderedSame));
 }
 
--(void)loadDocument:(NSString*)documentName version:(NSString*)version getAppAsJSONDataBlock:(NSData* (^)())getAppAsJSONDataBlock
+-(BOOL)loadDocument:(NSString*)documentName version:(NSString*)version getAppAsJSONDataBlock:(NSData* (^)())getAppAsJSONDataBlock
 {
     // no change in the document
     if(![self documentHasChanged:documentName version:version])
-        return;
+        return YES;
     
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
@@ -92,13 +92,35 @@ NSString * const COUCHAPP_LOADED_VERSION_FIELD  = @"loaded_rev";
     
     // create
     responseData = [self serverHTTPRequest:documentURL httpMethod:@"PUT" data:getAppAsJSONDataBlock() contentType:CONTENT_TYPE_FORM response:nil];
-    if(!RESPONSE_DATA_OK(responseData))
+
+    BOOL success = RESPONSE_DATA_OK(responseData);
+    if(!success)
         NSLog(@"Failed to create the couch app at URL: %@", documentURL);
 
     // update the version -> if there is no revision, skip and it will be loaded again next time
     else
         [self setCurrentAppVersion:documentName version:version];
     [pool release];
+    
+    return success;
+}
+
+-(BOOL)loadDocumentFromBundle:(NSBundle*)bundle documentName:(NSString*)documentName documentBundlePath:(NSString*)documentBundlePath versionBundlePath:(NSString*)versionBundlePath
+{
+    NSString *versionAbsolutePath = [[bundle resourcePath] stringByAppendingPathComponent:versionBundlePath];
+    NSString *version = [NSString stringWithContentsOfFile:versionAbsolutePath usedEncoding:nil error:nil];
+    
+    if(!version)
+    {
+        NSLog(@"Failed to find the bundle resource: %@", versionAbsolutePath);
+        return NO;
+    }
+    
+    // load the coachapp if needed
+    return [self loadDocument:documentName version:version getAppAsJSONDataBlock:^(){
+        NSString *documentAbsolutePath = [[bundle resourcePath] stringByAppendingPathComponent:documentBundlePath];
+        return (NSData*) [NSData dataWithContentsOfFile:documentAbsolutePath];
+    }];
 }
 
 -(void)gotoAppPage:(NSString*)appDocumentName webView:(UIWebView*)webView page:(NSString*)page

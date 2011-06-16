@@ -38,23 +38,11 @@
     // put on a background thread because currently the manager uses async HTTP calls
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,0), ^{
 
-        NSString *pathToAppVersion = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"mycouchapp.version"];
-        NSString *appVersion = [NSString stringWithContentsOfFile:pathToAppVersion usedEncoding:nil error:nil]; 
+        // load the coachapp if needed from a bundle (you can create non-bundle loading options through loadDocument)
+        [couchMover loadDocumentFromBundle:[NSBundle mainBundle] documentName:@"_design/mycouchapp" documentBundlePath:@"mycouchapp.json" versionBundlePath:@"mycouchapp.version"];
         
-        // load the coachapp if needed
-        [couchMover loadDocument:@"_design/mycouchapp" version:appVersion getAppAsJSONDataBlock:^(){
-            NSString *pathToApp = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"mycouchapp.json"];
-            return (NSData*) [NSData dataWithContentsOfFile:pathToApp];
-        }];
-        
-        NSString *pathToData = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"mydata.version"];
-        NSString *dataVersion = [NSString stringWithContentsOfFile:pathToData usedEncoding:nil error:nil]; 
-
-        // load some packaged data
-        [couchMover loadDocument:@"mydata" version:dataVersion getAppAsJSONDataBlock:^(){
-            NSString *pathToApp = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"mydata.json"];
-            return (NSData*) [NSData dataWithContentsOfFile:pathToApp];
-        }];
+        // load the data if needed from a bundle (you can create non-bundle loading options through loadDocument)
+        [couchMover loadDocumentFromBundle:[NSBundle mainBundle] documentName:@"mydata" documentBundlePath:@"mydata.json" versionBundlePath:@"mydata.version"];
 
         // go back to the main thread because that is where the webview is
         dispatch_async(dispatch_get_main_queue(), ^{

@@ -38,7 +38,8 @@
 ///////////////////////
 -(CouchMover*)init:(NSURL*)inServerURL serverCredential:(NSURLCredential*)inServerCredential databaseName:(NSString*)inDatabaseName; 
 -(BOOL)documentHasChanged:(NSString*)documentName version:(NSString*)version;           // for a couch app, pass the documentName in the format of @"_design/appname"
--(void)loadDocument:(NSString*)documentName version:(NSString*)version getAppAsJSONDataBlock:(NSData* (^)())getAppAsJSONDataBlock;      // for a couch app, pass the documentName in the format of @"_design/appname"
+-(BOOL)loadDocument:(NSString*)documentName version:(NSString*)version getAppAsJSONDataBlock:(NSData* (^)())getAppAsJSONDataBlock;      // for a couch app, pass the documentName in the format of @"_design/appname"
+-(BOOL)loadDocumentFromBundle:(NSBundle*)bundle documentName:(NSString*)documentName documentBundlePath:(NSString*)documentBundlePath versionBundlePath:(NSString*)versionBundlePath;
 -(void)gotoAppPage:(NSString*)appDocumentName webView:(UIWebView*)webView page:(NSString*)page; 
 
 ///////////////////////
