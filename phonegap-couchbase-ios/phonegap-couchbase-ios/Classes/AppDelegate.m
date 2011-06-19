@@ -44,6 +44,9 @@
         // load the data if needed from a bundle (you can create non-bundle loading options through loadDocument)
         [couchMover loadDocumentFromBundle:[NSBundle mainBundle] documentName:@"mydata" documentBundlePath:@"mydata.json" versionBundlePath:@"mydata.version"];
 
+        // load the data views if needed from a bundle (you can create non-bundle loading options through loadDocument)
+        [couchMover loadDocumentFromBundle:[NSBundle mainBundle] documentName:@"_design/mydata_views" documentBundlePath:@"mydata_views.json" versionBundlePath:@"mydata_views.version"];
+
         // go back to the main thread because that is where the webview is
         dispatch_async(dispatch_get_main_queue(), ^{
             [couchMover gotoAppPage:@"_design/mycouchapp" webView:self.webView page:@"index.html"];

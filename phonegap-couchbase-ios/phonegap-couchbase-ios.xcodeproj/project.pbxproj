@@ -39,13 +39,15 @@
 		0A59445813A806F500402C46 /* Base64Transcoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A59445413A806F500402C46 /* Base64Transcoder.h */; };
 		0A59445913A806F500402C46 /* NSData_Base64Extensions.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A59445513A806F500402C46 /* NSData_Base64Extensions.h */; };
 		0A59445A13A806F500402C46 /* NSData_Base64Extensions.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A59445613A806F500402C46 /* NSData_Base64Extensions.m */; };
-		0A5CAEA213A9BDDB00962734 /* mydata.json in Resources */ = {isa = PBXBuildFile; fileRef = 0A5CAEA013A9BDDB00962734 /* mydata.json */; };
-		0A5CAEA313A9BDDB00962734 /* mydata.version in Resources */ = {isa = PBXBuildFile; fileRef = 0A5CAEA113A9BDDB00962734 /* mydata.version */; };
-		0A5FF58513A7C0C70087D7FD /* mycouchapp.json in Resources */ = {isa = PBXBuildFile; fileRef = 0A5FF58313A7C0C70087D7FD /* mycouchapp.json */; };
-		0A5FF58613A7C0C70087D7FD /* mycouchapp.version in Resources */ = {isa = PBXBuildFile; fileRef = 0A5FF58413A7C0C70087D7FD /* mycouchapp.version */; };
 		0A5FF58913A7C2610087D7FD /* CouchMover.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A5FF58713A7C2610087D7FD /* CouchMover.h */; };
 		0A5FF58A13A7C2610087D7FD /* CouchMover.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A5FF58813A7C2610087D7FD /* CouchMover.m */; };
 		0AC7E6FD13A6A1BA00CCB232 /* libCouchbase.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0AC7E6FC13A6A1BA00CCB232 /* libCouchbase.a */; };
+		0ACE25BC13AE116100BFCFB0 /* mycouchapp.json in Resources */ = {isa = PBXBuildFile; fileRef = 0ACE25B613AE116100BFCFB0 /* mycouchapp.json */; };
+		0ACE25BD13AE116100BFCFB0 /* mycouchapp.version in Resources */ = {isa = PBXBuildFile; fileRef = 0ACE25B713AE116100BFCFB0 /* mycouchapp.version */; };
+		0ACE25BE13AE116100BFCFB0 /* mydata_views.json in Resources */ = {isa = PBXBuildFile; fileRef = 0ACE25B813AE116100BFCFB0 /* mydata_views.json */; };
+		0ACE25BF13AE116100BFCFB0 /* mydata_views.version in Resources */ = {isa = PBXBuildFile; fileRef = 0ACE25B913AE116100BFCFB0 /* mydata_views.version */; };
+		0ACE25C013AE116100BFCFB0 /* mydata.json in Resources */ = {isa = PBXBuildFile; fileRef = 0ACE25BA13AE116100BFCFB0 /* mydata.json */; };
+		0ACE25C113AE116100BFCFB0 /* mydata.version in Resources */ = {isa = PBXBuildFile; fileRef = 0ACE25BB13AE116100BFCFB0 /* mydata.version */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -97,13 +99,15 @@
 		0A59445413A806F500402C46 /* Base64Transcoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Base64Transcoder.h; path = Vendor/TouchFoundation_MinimalExtraction/Base64Transcoder.h; sourceTree = "<group>"; };
 		0A59445513A806F500402C46 /* NSData_Base64Extensions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NSData_Base64Extensions.h; path = Vendor/TouchFoundation_MinimalExtraction/NSData_Base64Extensions.h; sourceTree = "<group>"; };
 		0A59445613A806F500402C46 /* NSData_Base64Extensions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NSData_Base64Extensions.m; path = Vendor/TouchFoundation_MinimalExtraction/NSData_Base64Extensions.m; sourceTree = "<group>"; };
-		0A5CAEA013A9BDDB00962734 /* mydata.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = mydata.json; path = Resources/mydata.json; sourceTree = "<group>"; };
-		0A5CAEA113A9BDDB00962734 /* mydata.version */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = mydata.version; path = Resources/mydata.version; sourceTree = "<group>"; };
-		0A5FF58313A7C0C70087D7FD /* mycouchapp.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = mycouchapp.json; path = Resources/mycouchapp.json; sourceTree = "<group>"; };
-		0A5FF58413A7C0C70087D7FD /* mycouchapp.version */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = mycouchapp.version; path = Resources/mycouchapp.version; sourceTree = "<group>"; };
 		0A5FF58713A7C2610087D7FD /* CouchMover.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CouchMover.h; path = Classes/CouchMover.h; sourceTree = "<group>"; };
 		0A5FF58813A7C2610087D7FD /* CouchMover.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CouchMover.m; path = Classes/CouchMover.m; sourceTree = "<group>"; };
 		0AC7E6FC13A6A1BA00CCB232 /* libCouchbase.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libCouchbase.a; path = "phonegap-couchbase-ios/Vendor/Couchbase/libCouchbase.a"; sourceTree = "<group>"; };
+		0ACE25B613AE116100BFCFB0 /* mycouchapp.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = mycouchapp.json; path = Resources/mycouchapp.json; sourceTree = "<group>"; };
+		0ACE25B713AE116100BFCFB0 /* mycouchapp.version */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = mycouchapp.version; path = Resources/mycouchapp.version; sourceTree = "<group>"; };
+		0ACE25B813AE116100BFCFB0 /* mydata_views.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = mydata_views.json; path = Resources/mydata_views.json; sourceTree = "<group>"; };
+		0ACE25B913AE116100BFCFB0 /* mydata_views.version */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = mydata_views.version; path = Resources/mydata_views.version; sourceTree = "<group>"; };
+		0ACE25BA13AE116100BFCFB0 /* mydata.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = mydata.json; path = Resources/mydata.json; sourceTree = "<group>"; };
+		0ACE25BB13AE116100BFCFB0 /* mydata.version */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = mydata.version; path = Resources/mydata.version; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -207,10 +211,12 @@
 		0A1A731813A4D09F00850912 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				0A5CAEA013A9BDDB00962734 /* mydata.json */,
-				0A5CAEA113A9BDDB00962734 /* mydata.version */,
-				0A5FF58313A7C0C70087D7FD /* mycouchapp.json */,
-				0A5FF58413A7C0C70087D7FD /* mycouchapp.version */,
+				0ACE25B613AE116100BFCFB0 /* mycouchapp.json */,
+				0ACE25B713AE116100BFCFB0 /* mycouchapp.version */,
+				0ACE25B813AE116100BFCFB0 /* mydata_views.json */,
+				0ACE25B913AE116100BFCFB0 /* mydata_views.version */,
+				0ACE25BA13AE116100BFCFB0 /* mydata.json */,
+				0ACE25BB13AE116100BFCFB0 /* mydata.version */,
 				0A1A731913A4D09F00850912 /* icons */,
 				0A1A732013A4D09F00850912 /* splash */,
 			);
@@ -361,10 +367,12 @@
 				0A1A733013A4D09F00850912 /* README in Resources */,
 				0A1A733713A4D0E100850912 /* www in Resources */,
 				0A1A734413A4D17500850912 /* Couchbase.bundle in Resources */,
-				0A5FF58513A7C0C70087D7FD /* mycouchapp.json in Resources */,
-				0A5FF58613A7C0C70087D7FD /* mycouchapp.version in Resources */,
-				0A5CAEA213A9BDDB00962734 /* mydata.json in Resources */,
-				0A5CAEA313A9BDDB00962734 /* mydata.version in Resources */,
+				0ACE25BC13AE116100BFCFB0 /* mycouchapp.json in Resources */,
+				0ACE25BD13AE116100BFCFB0 /* mycouchapp.version in Resources */,
+				0ACE25BE13AE116100BFCFB0 /* mydata_views.json in Resources */,
+				0ACE25BF13AE116100BFCFB0 /* mydata_views.version in Resources */,
+				0ACE25C013AE116100BFCFB0 /* mydata.json in Resources */,
+				0ACE25C113AE116100BFCFB0 /* mydata.version in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -1,0 +1,10 @@
+{
+  "env": {
+    "default": {
+      "db": "http://localhost:5984/mycouchapp_db"
+    },
+    "production": {
+      "db": "http://localhost:5984/mycouchapp_db"
+    }
+  }
+}

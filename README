@@ -88,15 +88,19 @@ Sample Code:
      Then edit mycouchapp.json to remove the "_id" and "_rev" fields.
 
   --------------------------------
-  By using couchpack (install):
+  By using couchpack:
 
+    Install:
      gem install couchpack
 
-  --------------------------------
-  By using couchpack (run):
+    Run (one time):
 
      cd phonegap-couchbase-xplatform/phonegap-couchbase-ios/phonegap-couchbase-ios/Resources
-     couchpack -d mycouchapp -a "_design/mycouchapp" -o mycouchapp 
+     couchpack document http://localhost:5984/mycouchapp/_design/mycouchapp mycouchapp 
+
+    Run (automatically watching for changes):
+     
+     couchpack document http://localhost:5984/mycouchapp/_design/mycouchapp mycouchapp --auto
 
 
   c) Make sure the file is added to the resource directory in your project. Then build and run in XCode. 
