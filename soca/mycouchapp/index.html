@@ -42,34 +42,23 @@
 	function onBodyLoad()
 	{	
     var validateDocumentsExist = function(database_name, document_names) {
-      return $.couch.allDbs({
-        success: function(dbs) {
-          var database;
-          if (_.include(dbs, database_name)) {
-            database = $.couch.db(database_name);
-            return database.allDocs({
-              keys: document_names,
-              success: function(docs) {
-                var all_database_document_names;
-                all_database_document_names = _.map(docs.rows, function(document) {
-                  return document.id;
-                });
-                return _.each(document_names, function(document_name) {
-                  if (!_.include(all_database_document_names, document_name)) {
-                    return alert("Failed to find the document: " + document_name + " in database: " + database_name);
-                  }
-                });
-              },
-              error: function() {
-                return alert("Failed to get the documents for database: " + database_name);
-              }
-            });
-          } else {
-            return alert("Validation failed: database does not exist: " + database_name);
-          }
+      var database;
+      database = $.couch.db(database_name);
+      return database.allDocs({
+        keys: document_names,
+        success: function(docs) {
+          var all_database_document_names;
+          all_database_document_names = _.map(docs.rows, function(document) {
+            return document.id;
+          });
+          return _.each(document_names, function(document_name) {
+            if (!_.include(all_database_document_names, document_name)) {
+              return alert("Failed to find the document: " + document_name + " in database: " + database_name);
+            }
+          });
         },
         error: function() {
-          return alert("Failed to get database names");
+          return alert("Failed to get the documents for database: " + database_name);
         }
       });
     };
