@@ -51,17 +51,45 @@ NSString * const COUCHAPP_LOADED_VERSION_FIELD  = @"loaded_rev";
     return self;
 }
 
+-(BOOL)ensureDatabaseExists
+{
+    NSString *databaseURL = [self urlToDatabase];
+    NSData *responseData;
+    
+    /////////////////////////
+    // check existence - GET
+    /////////////////////////
+    responseData = [self serverHTTPRequest:databaseURL httpMethod:@"GET" response:nil];
+    
+    // failed to connect to server or parse response
+    if(!responseData) 
+    {
+        NSLog(@"Failed to connect to the server at: %@", databaseURL);
+        return NO;
+    }
+    
+    // the DB exists
+    if(RESPONSE_DATA_DB_EXISTS(responseData))
+        return YES;
+    
+    /////////////////////////
+    // doesn't exist so create - PUT
+    /////////////////////////
+    responseData = [self serverHTTPRequest:databaseURL httpMethod:@"PUT" response:nil];
+    return RESPONSE_DATA_OK(responseData);
+}
+
 -(BOOL)documentHasChanged:(NSString*)documentName version:(NSString*)version
 {
     // call this first because loadDocument calls this
-    [self ensureAppDatabaseExists];
+    [self ensureDatabaseExists];
 
     // no version so always load
     if(!version)
         return TRUE;
     
     // no change so do not upload
-    NSString *currentVersion = [self getCurrentAppVersion:documentName];
+    NSString *currentVersion = [self getCurrentDocumentVersion:documentName];
     return(!currentVersion || ([currentVersion compare:version] != NSOrderedSame));
 }
 
@@ -73,7 +101,7 @@ NSString * const COUCHAPP_LOADED_VERSION_FIELD  = @"loaded_rev";
     
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
-    NSString *documentURL = [self urlToAppDocument:documentName];
+    NSString *documentURL = [self urlToDocument:documentName];
     NSData *responseData;
     
     /////////////////////////
@@ -99,7 +127,7 @@ NSString * const COUCHAPP_LOADED_VERSION_FIELD  = @"loaded_rev";
 
     // update the version -> if there is no revision, skip and it will be loaded again next time
     else
-        [self setCurrentAppVersion:documentName version:version];
+        [self setCurrentDocumentVersion:documentName version:version];
     [pool release];
     
     return success;
@@ -125,7 +153,7 @@ NSString * const COUCHAPP_LOADED_VERSION_FIELD  = @"loaded_rev";
 
 -(void)gotoAppPage:(NSString*)appDocumentName webView:(UIWebView*)webView page:(NSString*)page
 {
-    NSString *couchappApgeURL = [[NSString alloc] initWithFormat:@"window.location.href = \"%@/%@\"", [self urlToAppDocument:appDocumentName], page];
+    NSString *couchappApgeURL = [[NSString alloc] initWithFormat:@"window.location.href = \"%@/%@\"", [self urlToDocument:appDocumentName], page];
     [webView stringByEvaluatingJavaScriptFromString:couchappApgeURL];
     [couchappApgeURL release];
 }
@@ -163,35 +191,7 @@ NSString * const COUCHAPP_LOADED_VERSION_FIELD  = @"loaded_rev";
 ///////////////////////
 // Internal Flow
 ///////////////////////
--(BOOL)ensureAppDatabaseExists
-{
-    NSString *databaseURL = [self urlToAppDatabase];
-    NSData *responseData;
-    
-    /////////////////////////
-    // check existence - GET
-    /////////////////////////
-    responseData = [self serverHTTPRequest:databaseURL httpMethod:@"GET" response:nil];
-    
-    // failed to connect to server or parse response
-    if(!responseData) 
-    {
-        NSLog(@"Failed to connect to the server at: %@", databaseURL);
-        return NO;
-    }
-    
-    // the DB exists
-    if(RESPONSE_DATA_DB_EXISTS(responseData))
-        return YES;
-    
-    /////////////////////////
-    // doesn't exist so create - PUT
-    /////////////////////////
-    responseData = [self serverHTTPRequest:databaseURL httpMethod:@"PUT" response:nil];
-    return RESPONSE_DATA_OK(responseData);
-}
-
--(NSString*)getCurrentAppVersion:(NSString*)documentName
+-(NSString*)getCurrentDocumentVersion:(NSString*)documentName
 {
     NSString *documentURL = [self urlToLoadedDocumentVerionDocument:documentName];
     NSData *responseData;
@@ -209,7 +209,7 @@ NSString * const COUCHAPP_LOADED_VERSION_FIELD  = @"loaded_rev";
     return RESPONSE_DATA_DOC_EXISTS(responseData)? [self responseDataExtractSimpleValue:responseData field:COUCHAPP_LOADED_VERSION_FIELD] : nil;
 }
 
--(void)setCurrentAppVersion:(NSString*)documentName version:(NSString*)version
+-(void)setCurrentDocumentVersion:(NSString*)documentName version:(NSString*)version
 {
     NSString *documentURL = [self urlToLoadedDocumentVerionDocument:documentName];
     NSData *responseData;
@@ -240,19 +240,24 @@ NSString * const COUCHAPP_LOADED_VERSION_FIELD  = @"loaded_rev";
 ///////////////////////
 // URL Helpers
 ///////////////////////
--(NSString*)urlToAppDatabase
+-(NSString*)urlToDatabase
 {
     return [NSString stringWithFormat:@"%@%@", [self.serverURL absoluteString], self.databaseName];
 }
 
--(NSString*)urlToAppDocument:(NSString*)documentName
+-(NSString*)urlToDocument:(NSString*)documentName
 {
     return [NSString stringWithFormat:@"%@%@/%@", [self.serverURL absoluteString], self.databaseName, documentName];
 }
 
 -(NSString*)urlToLoadedDocumentVerionDocument:(NSString*)documentName
 {
-    return [NSString stringWithFormat:@"%@%@/%@_%@", [self.serverURL absoluteString], self.databaseName, documentName, COUCHAPP_LOADED_VERSION_DOC];
+    if([documentName hasPrefix:@"_design"])
+        return [NSString stringWithFormat:@"%@%@/%@_%@", [self.serverURL absoluteString], self.databaseName, documentName, COUCHAPP_LOADED_VERSION_DOC];
+
+    // make sure _design starts with _design so it is skipped in view generation
+    else
+        return [NSString stringWithFormat:@"%@%@/_design/%@_%@", [self.serverURL absoluteString], self.databaseName, documentName, COUCHAPP_LOADED_VERSION_DOC];
 }
 
 ///////////////////////

@@ -37,6 +37,7 @@
 // Public Interface
 ///////////////////////
 -(CouchMover*)init:(NSURL*)inServerURL serverCredential:(NSURLCredential*)inServerCredential databaseName:(NSString*)inDatabaseName; 
+-(BOOL)ensureDatabaseExists;
 -(BOOL)documentHasChanged:(NSString*)documentName version:(NSString*)version;           // for a couch app, pass the documentName in the format of @"_design/appname"
 -(BOOL)loadDocument:(NSString*)documentName version:(NSString*)version getAppAsJSONDataBlock:(NSData* (^)())getAppAsJSONDataBlock;      // for a couch app, pass the documentName in the format of @"_design/appname"
 -(BOOL)loadDocumentFromBundle:(NSBundle*)bundle documentName:(NSString*)documentName documentBundlePath:(NSString*)documentBundlePath versionBundlePath:(NSString*)versionBundlePath;
@@ -45,15 +46,14 @@
 ///////////////////////
 // Internal Flow
 ///////////////////////
--(BOOL)ensureAppDatabaseExists;
--(NSString*)getCurrentAppVersion:(NSString*)documentName;
--(void)setCurrentAppVersion:(NSString*)documentName version:(NSString*)version;
+-(NSString*)getCurrentDocumentVersion:(NSString*)documentName;
+-(void)setCurrentDocumentVersion:(NSString*)documentName version:(NSString*)version;
 
 ///////////////////////
 // URL Helpers
 ///////////////////////
--(NSString*)urlToAppDatabase;
--(NSString*)urlToAppDocument:(NSString*)documentName;
+-(NSString*)urlToDatabase;
+-(NSString*)urlToDocument:(NSString*)documentName;
 -(NSString*)urlToLoadedDocumentVerionDocument:(NSString*)documentName;
 
 ///////////////////////
