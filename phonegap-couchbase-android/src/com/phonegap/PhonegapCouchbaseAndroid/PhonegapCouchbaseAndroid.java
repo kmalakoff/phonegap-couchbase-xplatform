@@ -60,28 +60,28 @@ public class PhonegapCouchbaseAndroid extends DroidGap
 		   	CouchStarterCallback callback = new CouchStarterCallback() 
 		    {
 		   		@Override
-				public void couchStarted(String host, int port)
-				{
-					String serverURL = "http://" + host + ":" + Integer.toString(port) + "/";
+  				public void couchStarted(String host, int port)
+  				{
+  					String serverURL = "http://" + host + ":" + Integer.toString(port) + "/";
 
-					PasswordAuthentication credential = new PasswordAuthentication("admin", "admin".toCharArray());
-					credential = null; // NO USER/PASSWORD ON ANDROID
-				    CouchMover couchMover = new CouchMover(serverURL, credential, "mycouchapp_db");
+  					PasswordAuthentication credential = new PasswordAuthentication("admin", "admin".toCharArray());
+  					credential = null; // NO USER/PASSWORD ON ANDROID
+            CouchMover couchMover = new CouchMover(serverURL, credential, "mycouchapp_db");
 				    
-			        // load the coachapp if needed from a bundle (you can create non-bundle loading options through loadDocument)
-			        couchMover.loadDocumentFromAssetManager(getAssets(), "_design/mycouchapp", "mycouchapp.json", "mycouchapp.version");
+  			    // load the coachapp if needed from a bundle (you can create non-bundle loading options through loadDocument)
+  			    couchMover.loadDocumentFromAssetManager(getAssets(), "_design/mycouchapp", "mycouchapp.json", "mycouchapp.version");
 			        
-			        // load the data if needed from a bundle (you can create non-bundle loading options through loadDocument)
-			        couchMover.loadDocumentFromAssetManager(getAssets(), "mydata", "mydata.json", "mydata.version");
+  			    // load the data if needed from a bundle (you can create non-bundle loading options through loadDocument)
+  			    couchMover.loadDocumentFromAssetManager(getAssets(), "mydata", "mydata.json", "mydata.version");
 
-			        // load the data views if needed from a bundle (you can create non-bundle loading options through loadDocument)
-			        couchMover.loadDocumentFromAssetManager(getAssets(), "_design/mydata_views", "mydata_views.json", "mydata_views.version");
+  			    // load the data views if needed from a bundle (you can create non-bundle loading options through loadDocument)
+  			    couchMover.loadDocumentFromAssetManager(getAssets(), "_design/mydata_views", "mydata_views.json", "mydata_views.version");
 
-					couchMover.gotoAppPage("_design/mycouchapp", appView, "index.html");
-				} 
+  					couchMover.gotoAppPage("_design/mycouchapp", appView, "index.html");
+  				} 
 				
 		   		@Override
-				public void failed() { Log.v(LOG_TAG, "Failed to install and start Couchbase"); }
+				  public void failed() { Log.v(LOG_TAG, "Failed to install and start Couchbase"); }
 			};
 
 			couchStarter = new CouchStarter(this, callback);

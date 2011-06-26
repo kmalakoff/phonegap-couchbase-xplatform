@@ -3,7 +3,7 @@ This repository is a first step to help the Couchbase community develop a standa
 I started a thread explain this: https://groups.google.com/group/mobile-couchbase/browse_thread/thread/f4e9bc30e1dd3818
 
 The goals are:
-1) Allow for offline CouchApp loading since you cannot assume there will be a connection to download a CouchApp.
+1) Allow for offline CouchApp, views and seed data loading since you cannot assume there will be a connection to download a CouchApp.
 2) Provide a standard way for users to to authorized locally and to create an account on a remote server. 
 3) Provide best practice samples for organizing and syncing local and remote databases. For example: using local databases like "appdata_db" with server databases like "myusername/appdata_db" and making sure authentication and authorization is secure.
 4) Allow for users to trigger synchronizations from their mobile device while handling 2) and 3).
@@ -11,64 +11,13 @@ The goals are:
 
 Current Progress
 **************
-1) Offline CouchApp loading on iOS - YES
-2) Offline CouchApp loading on Android - NOT YET..volunteers? 
+1) Offline CouchApp, views and seed data loading on iOS - YES
+2) Offline CouchApp, views and seed data loading on Android - YES (but buggy - I believe due to the libcouch-android refactor: views don't work and I was only able to get 2.3.1 and 2.3.3 working)
 
-
-iOS Overview
+Workflow (only tested on Mac OSX):
 **************
 
-Goal 1) Allow for offline CouchApp loading
-
-There is an objective-C class called CouchAppManager which handles: 
-- CouchApp version checking either using the _rev field (version check requires CouchApp JSON loading/parsing) or a client supplied version string (version check can be performed without CouchApp JSON loading/parsing)
-- creating the CouchApp database if it doesn't exist, creating and updating the CouchApp (with the correct _rev and _id fields)
-- loading of any CouchApp page URL
-
-Sample Code:
-**************
-
-1) See AppDelegate.h and AppDelegate.m for integration tips. All Couchbase code that is integrated into PhoneGap is labeled with:
-
-// Couchbase changes START
-// Couchbase changes END
-
-2) The CouchMover class handles loading (or "moving") couch documents into CouchBase. It can be used for CouchApps or even initialization data. 
-
-  --------------------------------
-  For example, for a couchapp:
-
-    NSURLCredential *credential = [NSURLCredential credentialWithUser:@"admin" password:@"admin" persistence:NSURLCredentialPersistenceForSession];
-    CouchMover* couchMover = [[CouchMover alloc] init:serverURL serverCredential:credential databaseName:@"mycouchapp_db"];
-  
-    // load the coachapp if needed from a bundle (you can create non-bundle loading options through loadDocument)
-    [couchMover loadDocumentFromBundle:[NSBundle mainBundle] documentName:@"_design/mycouchapp" documentBundlePath:@"mycouchapp.json" versionBundlePath:@"mycouchapp.version"];
-  
-    [couchMover gotoAppPage:@"_design/mycouchapp" webView:self.webView page:@"index.html"];
-    [couchMover release];
-
-  --------------------------------
-  For example, to load a document:
-
-    NSURLCredential *credential = [NSURLCredential credentialWithUser:@"admin" password:@"admin" persistence:NSURLCredentialPersistenceForSession];
-    CouchMover* couchMover = [[CouchMover alloc] init:serverURL serverCredential:credential databaseName:@"mycouchdocument_db"];
-
-    // load the data if needed from a bundle (you can create non-bundle loading options through loadDocument)
-    [couchMover loadDocumentFromBundle:[NSBundle mainBundle] documentName:@"mydata" documentBundlePath:@"mydata.json" versionBundlePath:@"mydata.version"];
-
-    [couchMover release];
-
-
-3) In order to add CouchMover into your project, current you need to:
-
-  a) include the CouchMover files (CouchMover.h, CouchMover.m) 
-  
-  b) include the normal Couchbase files (Couchbase.bundle, Couchbase.h, libCouchbase.a) 
-  
-  c) include four files from TouchFoundation (Base64Transcoder.c, Base64Transcoder.h, NSData_Base64Extensions.h, NSData_Base64Extensions.m). This is for Base64 encoding for authentication - once Apple releases a standard implementation (and the project is updated) or if you link with TouchFoundation, you will no longer need these files. 
-
-
-4) The workflow to update the CouchApp is currently as follows:
+1) The workflow to update the CouchApp is currently as follows:
 
   a) Load the CouchApp into a desktop/laptop/cloud CouchDB. For example: 
      couchapp autopush http://127.0.0.1:5984/mycouchapp_db
@@ -103,13 +52,111 @@ Sample Code:
      couchpack document http://localhost:5984/mycouchapp/_design/mycouchapp mycouchapp --auto
 
 
-  c) Make sure the file is added to the resource directory in your project. Then build and run in XCode. 
+  c) Make sure the file is added to the resource directory in your project. Then build and run in XCode.
+
+Sample Code (iOS):
+**************
+Goal 1) Allow for offline CouchApp, views and seed data loading
+
+There is an objective-C class called CouchMover which handles: 
+- document version checking using a client supplied version string (version check can be performed without CouchApp JSON loading/parsing)
+- creating the document database if it doesn't exist, creating and replacing the document
+- loading of any CouchApp page URL
+
+1) See AppDelegate.h and AppDelegate.m for integration tips. All Couchbase code that is integrated into PhoneGap is labeled with:
+
+// Couchbase changes START
+// Couchbase changes END
+
+2) The CouchMover class handles loading (or "moving") couch documents into CouchBase. It can be used for CouchApps or even initialization data or views. PhoneGap and CouchApps are completely optional. 
+
+  --------------------------------
+  For example, for a couchapp:
+
+    NSURLCredential *credential = [NSURLCredential credentialWithUser:@"admin" password:@"admin" persistence:NSURLCredentialPersistenceForSession];
+    CouchMover* couchMover = [[CouchMover alloc] init:serverURL serverCredential:credential databaseName:@"mycouchapp_db"];
+  
+    // load the coachapp if needed from a bundle (you can create non-bundle loading options through loadDocument)
+    [couchMover loadDocumentFromBundle:[NSBundle mainBundle] documentName:@"_design/mycouchapp" documentBundlePath:@"mycouchapp.json" versionBundlePath:@"mycouchapp.version"];
+  
+    [couchMover gotoAppPage:@"_design/mycouchapp" webView:self.webView page:@"index.html"];
+    [couchMover release];
+
+  --------------------------------
+  For example, to load a document:
+
+    NSURLCredential *credential = [NSURLCredential credentialWithUser:@"admin" password:@"admin" persistence:NSURLCredentialPersistenceForSession];
+    CouchMover* couchMover = [[CouchMover alloc] init:serverURL serverCredential:credential databaseName:@"mycouchdocument_db"];
+
+    // load the data if needed from a bundle (you can create non-bundle loading options through loadDocument)
+    [couchMover loadDocumentFromBundle:[NSBundle mainBundle] documentName:@"mydata" documentBundlePath:@"mydata.json" versionBundlePath:@"mydata.version"];
+
+    [couchMover release];
+
+
+3) In order to add CouchMover into your project, current you need to:
+
+  a) include the CouchMover files (CouchMover.h, CouchMover.m) 
+  
+  b) include the normal Couchbase files (Couchbase.bundle, Couchbase.h, libCouchbase.a) 
+  
+  c) include four files from TouchFoundation (Base64Transcoder.c, Base64Transcoder.h, NSData_Base64Extensions.h, NSData_Base64Extensions.m). This is for Base64 encoding for authentication - once Apple releases a standard implementation (and the project is updated) or if you link with TouchFoundation, you will no longer need these files. 
+
+
+Sample Code (Android): (buggy - I believe due to the libcouch-android refactor: views don't work and I was only able to get 2.3.1 and 2.3.3 working)
+**************
+Goal 1) Allow for offline CouchApp, views and seed data loading
+
+There is a Java class called com.couchbaseextensions.CouchMover which handles: 
+
+- document version checking using a client supplied version string (version check can be performed without CouchApp JSON loading/parsing)
+- creating the document database if it doesn't exist, creating and replacing the document
+- loading of any CouchApp page URL
+
+1) See PhonegapCouchbaseAndroid.java and com.couchbaseextensions.CouchStarter for integration tips. All Couchbase code that is integrated into PhoneGap is labeled with:
+
+// Couchbase changes START
+// Couchbase changes END
+
+2) The CouchMover class handles loading (or "moving") couch documents into CouchBase. It can be used for CouchApps or even initialization data or views. PhoneGap and CouchApps are completely optional. 
+
+  --------------------------------
+  For example, for a couchapp:
+
+	PasswordAuthentication credential = new PasswordAuthentication("admin", "admin".toCharArray());
+  CouchMover couchMover = new CouchMover(serverURL, credential, "mycouchapp_db");
+    
+  // load the coachapp if needed from a bundle (you can create non-bundle loading options through loadDocument)
+  couchMover.loadDocumentFromAssetManager(getAssets(), "_design/mycouchapp", "mycouchapp.json", "mycouchapp.version");
+      
+	couchMover.gotoAppPage("_design/mycouchapp", appView, "index.html");
+
+  --------------------------------
+  For example, to load a document:
+
+	PasswordAuthentication credential = new PasswordAuthentication("admin", "admin".toCharArray());
+	credential = null; // NO USER/PASSWORD ON ANDROID
+  CouchMover couchMover = new CouchMover(serverURL, credential, "mycouchapp_db");
+    
+  // load the data if needed from a bundle (you can create non-bundle loading options through loadDocument)
+  couchMover.loadDocumentFromAssetManager(getAssets(), "mydata", "mydata.json", "mydata.version");
+
+	couchMover.gotoAppPage("_design/mycouchapp", appView, "index.html");
+
+
+3) In order to add CouchMover into your project, current you need to:
+
+  a) include the CouchMover files (CouchMover.java). You can also use CouchStarter.java if you like, but I'm probably not going to maintain it once I start dealing with real-world error conditions. 
+  
+  b) include the libcouch-android library and set it up using the online instructions: https://github.com/couchbaselabs/Android-Couchbase/blob/master/README.md
+  
 
 Notes:
 **************
-- doesn't use Trundle to try to keep it minimal.
-- currently bundled with minimal Vendor Source (Couchbase, TouchFoundation).
-- currently the library is written to use synchronous HTTP calls to keep the program flow simple. You can use Grand Central Dispatch (GCD) to put it on a background thread.
+- iOS version doesn't use Trundle to try to keep it minimal.
+- iOS version is currently bundled with minimal Vendor Source (Couchbase, TouchFoundation).
+- currently the CouchMover libraries are written to use synchronous HTTP calls to keep the program flow simple. You can use Grand Central Dispatch (GCD) to put it on a background thread, but on Android, it is up to you how to put it on a background thread.
+
 
 Troubleshooting:
 **************
