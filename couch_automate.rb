@@ -23,3 +23,9 @@ p = fork { exec 'cd phonegap-couchbase-ios/phonegap-couchbase-ios/Resources; cou
 Process.detach(p)
 p = fork { exec 'cd phonegap-couchbase-ios/phonegap-couchbase-ios/Resources; couchpack document http://localhost:5984/mycouchapp_db/_design/mydata_views mydata_views --auto' }
 Process.detach(p)
+p = fork { exec 'cd phonegap-couchbase-android/assets; couchpack document http://localhost:5984/mycouchapp_db/_design/mycouchapp mycouchapp --auto' }
+Process.detach(p)
+p = fork { exec 'cd phonegap-couchbase-android/assets; couchpack document http://localhost:5984/mycouchapp_db/mydata mydata --auto' }
+Process.detach(p)
+p = fork { exec 'cd phonegap-couchbase-android/assets; couchpack document http://localhost:5984/mycouchapp_db/_design/mydata_views mydata_views --auto' }
+Process.detach(p)

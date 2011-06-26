@@ -21,14 +21,11 @@
 
 @interface CouchMover : NSObject {
 	NSURL* serverURL;                      // pass the URL from "CouchbaseDelegate couchbaseDidStart"
-    NSURLCredential *couchappServerCredential;      // required for authorization
     NSString* databaseName;                 // should be in the form of "mydatabase"
-    
     NSString* _credentialString;
 }
 
 @property (copy, readwrite) NSURL* serverURL;
-@property (copy, readwrite) NSURLCredential *couchappServerCredential;
 @property (copy, readwrite) NSString* databaseName;
 
 @property (copy, readonly) NSString* _credentialString;
@@ -37,9 +34,10 @@
 // Public Interface
 ///////////////////////
 -(CouchMover*)init:(NSURL*)inServerURL serverCredential:(NSURLCredential*)inServerCredential databaseName:(NSString*)inDatabaseName; 
+-(void)setServerCredential:(NSURLCredential*)inCredential;
 -(BOOL)ensureDatabaseExists;
 -(BOOL)documentHasChanged:(NSString*)documentName version:(NSString*)version;           // for a couch app, pass the documentName in the format of @"_design/appname"
--(BOOL)loadDocument:(NSString*)documentName version:(NSString*)version getAppAsJSONDataBlock:(NSData* (^)())getAppAsJSONDataBlock;      // for a couch app, pass the documentName in the format of @"_design/appname"
+-(BOOL)loadDocument:(NSString*)documentName version:(NSString*)version serverCredential:(NSData* (^)())serverCredential;      // for a couch app, pass the documentName in the format of @"_design/appname"
 -(BOOL)loadDocumentFromBundle:(NSBundle*)bundle documentName:(NSString*)documentName documentBundlePath:(NSString*)documentBundlePath versionBundlePath:(NSString*)versionBundlePath;
 -(void)gotoAppPage:(NSString*)appDocumentName webView:(UIWebView*)webView page:(NSString*)page; 
 

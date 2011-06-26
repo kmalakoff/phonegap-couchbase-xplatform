@@ -20,6 +20,7 @@
 #import "CouchMover.h"
 #import "NSData_Base64Extensions.h"             // for asBase64EncodedString for authenticaton
 
+NSString * const ACCEPT_TYPE_JSON               = @"application/json";
 NSString * const CONTENT_TYPE_JSON              = @"application/json";
 NSString * const CONTENT_TYPE_FORM              = @"multipart/form-data";
 NSString * const COUCHAPP_LOADED_VERSION_DOC    = @"loaded_version";
@@ -45,10 +46,27 @@ NSString * const COUCHAPP_LOADED_VERSION_FIELD  = @"loaded_rev";
         return nil;
     
     self.serverURL = inServerURL;
-    self.couchappServerCredential = inServerCredential;
     self.databaseName = inDatabaseName;
+    [self setServerCredential:inServerCredential];
     
     return self;
+}
+
+-(void)setServerCredential:(NSURLCredential*)inCredential
+{
+    if(inCredential)
+    {
+        NSString *tempString = [[NSString alloc] initWithFormat:@"%@:%@", inCredential.user, inCredential.password];
+        NSData *credentialData = [tempString dataUsingEncoding:NSUTF8StringEncoding];
+        [tempString release];
+        tempString = [credentialData asBase64EncodedString:0];
+        _credentialString = [[NSString alloc] initWithFormat:@"Basic %@", tempString];
+    }
+    else
+    {
+        [_credentialString release];
+        _credentialString = nil;
+    }
 }
 
 -(BOOL)ensureDatabaseExists
@@ -93,7 +111,7 @@ NSString * const COUCHAPP_LOADED_VERSION_FIELD  = @"loaded_rev";
     return(!currentVersion || ([currentVersion compare:version] != NSOrderedSame));
 }
 
--(BOOL)loadDocument:(NSString*)documentName version:(NSString*)version getAppAsJSONDataBlock:(NSData* (^)())getAppAsJSONDataBlock
+-(BOOL)loadDocument:(NSString*)documentName version:(NSString*)version serverCredential:(NSData* (^)())serverCredential
 {
     // no change in the document
     if(![self documentHasChanged:documentName version:version])
@@ -105,25 +123,25 @@ NSString * const COUCHAPP_LOADED_VERSION_FIELD  = @"loaded_rev";
     NSData *responseData;
     
     /////////////////////////
-    // check existence of app - HEAD and if it does, DELETE it before update
-    // NOTE: this is to avoid having to update the provided couchapp with the _rev parameter from the existing app 
+    // check existence of document - HEAD and if it does, DELETE it before update
+    // NOTE: this is to avoid having to update the provided document with the _rev parameter from the existing document 
     /////////////////////////
 
-    // get the current revision if app exists
+    // get the current revision if document exists
     NSHTTPURLResponse *response = nil;
     [self serverHTTPRequest:documentURL httpMethod:@"HEAD" response:&response];
     NSString *_revCurrent = response ? [[response allHeaderFields] valueForKey:@"Etag"] : nil; 
 
-    // delete the current app
+    // delete the current document
     if(_revCurrent)
         [self serverHTTPRequest_DeleteDocument:documentURL _revCurrent:_revCurrent];
     
     // create
-    responseData = [self serverHTTPRequest:documentURL httpMethod:@"PUT" data:getAppAsJSONDataBlock() contentType:CONTENT_TYPE_FORM response:nil];
+    responseData = [self serverHTTPRequest:documentURL httpMethod:@"PUT" data:serverCredential() contentType:CONTENT_TYPE_FORM response:nil];
 
     BOOL success = RESPONSE_DATA_OK(responseData);
     if(!success)
-        NSLog(@"Failed to create the couch app at URL: %@", documentURL);
+        NSLog(@"Failed to create the document at URL: %@", documentURL);
 
     // update the version -> if there is no revision, skip and it will be loaded again next time
     else
@@ -144,8 +162,8 @@ NSString * const COUCHAPP_LOADED_VERSION_FIELD  = @"loaded_rev";
         return NO;
     }
     
-    // load the coachapp if needed
-    return [self loadDocument:documentName version:version getAppAsJSONDataBlock:^(){
+    // load the document if needed
+    return [self loadDocument:documentName version:version serverCredential:^(){
         NSString *documentAbsolutePath = [[bundle resourcePath] stringByAppendingPathComponent:documentBundlePath];
         return (NSData*) [NSData dataWithContentsOfFile:documentAbsolutePath];
     }];
@@ -153,40 +171,10 @@ NSString * const COUCHAPP_LOADED_VERSION_FIELD  = @"loaded_rev";
 
 -(void)gotoAppPage:(NSString*)appDocumentName webView:(UIWebView*)webView page:(NSString*)page
 {
-    NSString *couchappApgeURL = [[NSString alloc] initWithFormat:@"window.location.href = \"%@/%@\"", [self urlToDocument:appDocumentName], page];
-    [webView stringByEvaluatingJavaScriptFromString:couchappApgeURL];
-    [couchappApgeURL release];
+    NSString *couchAppPageURL = [[NSString alloc] initWithFormat:@"window.location.href = \"%@/%@\"", [self urlToDocument:appDocumentName], page];
+    [webView stringByEvaluatingJavaScriptFromString:couchAppPageURL];
+    [couchAppPageURL release];
 }
-
--(NSURLCredential*)couchappServerCredential
-{
-    return couchappServerCredential;
-}
-
--(void)setCouchappServerCredential:(NSURLCredential*)inCredential
-{
-    [inCredential retain];
-    
-    if(couchappServerCredential)
-        [couchappServerCredential release];
-    
-    couchappServerCredential = inCredential;
-
-    if(couchappServerCredential)
-    {
-        NSString *tempString = [[NSString alloc] initWithFormat:@"%@:%@", couchappServerCredential.user, couchappServerCredential.password];
-        NSData *credentialData = [tempString dataUsingEncoding:NSUTF8StringEncoding];
-        [tempString release];
-        tempString = [credentialData asBase64EncodedString:0];
-        _credentialString = [[NSString alloc] initWithFormat:@"Basic %@", tempString];
-    }
-    else
-    {
-        [_credentialString release];
-        _credentialString = nil;
-    }
-}
-
 
 ///////////////////////
 // Internal Flow
@@ -232,7 +220,7 @@ NSString * const COUCHAPP_LOADED_VERSION_FIELD  = @"loaded_rev";
     // create
     responseData = [self serverHTTPRequest:documentURL httpMethod:@"PUT" data:versionData contentType:CONTENT_TYPE_FORM response:nil];
     if(!RESPONSE_DATA_OK(responseData))
-        NSLog(@"Failed to create the couch app version document at URL: %@", documentURL);
+        NSLog(@"Failed to create the document version document at URL: %@", documentURL);
     
     [versionDocument release];
 }
@@ -272,7 +260,7 @@ NSString * const COUCHAPP_LOADED_VERSION_FIELD  = @"loaded_rev";
 {
     NSMutableURLRequest *    request = [[NSMutableURLRequest alloc] init];
     [request setHTTPMethod:httpMethod];
-    [request setValue:CONTENT_TYPE_JSON forHTTPHeaderField:@"Accept"];
+    [request setValue:ACCEPT_TYPE_JSON forHTTPHeaderField:@"Accept"];
     [self requestAddURLString:request urlString:urlString];
     [self requestAddCredential:request];
     
@@ -418,7 +406,6 @@ NSString * const COUCHAPP_LOADED_VERSION_FIELD  = @"loaded_rev";
     [_credentialString release];
 
 	[serverURL release];
-	[couchappServerCredential release];
 	[databaseName release];
 	[super dealloc];
 }

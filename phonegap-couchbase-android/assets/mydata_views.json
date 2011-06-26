@@ -1,0 +1,1 @@
+{"views":{"message":{"map":"function(doc) {\n  if(doc.type == \"data\"){\n    emit(doc._id, doc.message);\n  }\n}\n"}}}

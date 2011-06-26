@@ -71,18 +71,30 @@
 			setTimeout(function() {
 			  if(!data_retrieved)
     		  $("h1#loaded_message").html("CouchApp failed to get data");
-			}, 3000 );
+			}, 10000 );
 
       $.couch.urlPrefix = window.location.host? "http://" + window.location.host : "http://127.0.0.1:5984";
       
       // for debugging
 	    validateDocumentsExist("mycouchapp_db", ["_design/mycouchapp", "mydata", "_design/mydata_views"]);
 
-      // this example is over-engineered, but it is meant to show that data and views can be loaded into a couchdb
-      $.couch.db("mycouchapp_db").view("mydata_views/message?key=\"mydata\"", { success: function(view_data) {  
-        data_retrieved = true;
-             $("h1#loaded_message").html(view_data.rows[0].value);
-      }});
+      // android views didn't work, instead do a simple document query
+      var agent = navigator.userAgent.toLowerCase();
+      var is_android = (agent.search("android") > -1);
+      if(is_android) {
+        // just get the document by id
+        $.couch.db("mycouchapp_db").openDoc("mydata", { success: function(document) {  
+          data_retrieved = true;
+               $("h1#loaded_message").html(document.message);
+        }});
+      }
+      else {
+        // this example is over-engineered, but it is meant to show that data and views can be loaded into a couchdb
+        $.couch.db("mycouchapp_db").view("mydata_views/message?key=\"mydata\"", { success: function(view_data) {  
+          data_retrieved = true;
+               $("h1#loaded_message").html(view_data.rows[0].value);
+        }});
+      }
 	  }
 
 	  // it is running from the filesystem
