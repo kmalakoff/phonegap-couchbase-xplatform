@@ -27,13 +27,12 @@
 @implementation AppDelegate
 
 // Couchbase changes START
-- (void)couchbaseDidStart:(NSURL *)serverURL { 
-    NSLog(@"[INFO] CouchDB is ready at serverURL %@",serverURL); 
+-(void)couchbaseMobile:(CouchbaseMobile*)couchbase didStart:(NSURL*)serverURL {
+    NSLog(@"Couchbase is Ready, go! %@", serverURL);
     
     // TODO: how should user name and password be handled properly? 
     // For example, using the default user and password at initialization, and switching to the user and password selected by the actual user, and handling remote server connections.
-    NSURLCredential *credential = [NSURLCredential credentialWithUser:@"admin" password:@"admin" persistence:NSURLCredentialPersistenceForSession];
-    CouchMover* couchMover = [[CouchMover alloc] init:serverURL serverCredential:credential databaseName:@"mycouchapp_db"];
+    CouchMover* couchMover = [[CouchMover alloc] init:serverURL serverCredential:nil databaseName:@"mycouchapp_db"];
     
     // put on a background thread because currently the manager uses async HTTP calls
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,0), ^{
@@ -54,6 +53,12 @@
         });
     });
 } 
+
+-(void)couchbaseMobile:(CouchbaseMobile*)couchbase failedToStart:(NSError*)error 
+{
+    NSAssert(NO, @"Couchbase failed to initialize: %@", error);
+}
+
 // Couchbase changes END
 
 @synthesize invokeString;
@@ -81,7 +86,9 @@
 	}
 
     // Couchbase changes START
-	[Couchbase startCouchbase:self]; 
+    CouchbaseMobile* cb = [[CouchbaseMobile alloc] init];
+    cb.delegate = self;
+    NSAssert([cb start], @"Couchbase didn't start! Error = %@", cb.error);
     // Couchbase changes END
     
 	return [super application:application didFinishLaunchingWithOptions:launchOptions];
@@ -93,7 +100,7 @@
 {
 	// Do something with the url here
 	NSString* jsString = [NSString stringWithFormat:@"handleOpenURL(\"%@\");", url];
-	[webView stringByEvaluatingJavaScriptFromString:jsString];
+	[self.webView stringByEvaluatingJavaScriptFromString:jsString];
 	
 	return YES;
 }

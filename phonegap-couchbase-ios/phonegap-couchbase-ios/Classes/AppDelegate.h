@@ -25,8 +25,8 @@
 #endif
 
 // Couchbase changes START
-#import "Couchbase.h" 
-#import "couchMover.h" 
+#import <Couchbase/CouchbaseMobile.h>
+#import "CouchMover.h" 
 
 @interface AppDelegate : PhoneGapDelegate<CouchbaseDelegate> {
 // Couchbase changes END
@@ -40,10 +40,6 @@
 // http://iphonedevelopertips.com/cocoa/launching-your-own-application-via-a-custom-url-scheme.html
 
 @property (copy)  NSString* invokeString;
-
-// Couchbase changes START
--(void)couchbaseDidStart:(NSURL *)serverURL; 
-// Couchbase changes END
 
 @end
 
