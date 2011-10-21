@@ -11,25 +11,42 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 #import "PluginResult.h"
+#import "NSMutableArray+QueueAdditions.h"
+
+#define PGPluginHandleOpenURLNotification	@"PGPluginHandleOpenURLNotification"
+
+#define VERIFY_ARGUMENTS(args, expectedCount, callbackId) if (![self verifyArguments:args withExpectedCount:expectedCount andCallbackId:callbackId \
+callerFileName:__FILE__ callerFunctionName:__PRETTY_FUNCTION__]) { return; }
+
 
 @class PhoneGapDelegate;
 
 @interface PGPlugin : NSObject {
-    UIWebView*    webView;
-    NSDictionary* settings;
 }
+
 @property (nonatomic, retain) UIWebView *webView;
 @property (nonatomic, retain) NSDictionary *settings;
 
--(PGPlugin*) initWithWebView:(UIWebView*)theWebView settings:(NSDictionary*)classSettings;
--(PGPlugin*) initWithWebView:(UIWebView*)theWebView;
+- (PGPlugin*) initWithWebView:(UIWebView*)theWebView settings:(NSDictionary*)classSettings;
+- (PGPlugin*) initWithWebView:(UIWebView*)theWebView;
 
--(void)onAppTerminate;
+- (void) handleOpenURL:(NSNotification*)notification;
+- (void) onAppTerminate;
+- (void) onMemoryWarning;
 
--(PhoneGapDelegate*) appDelegate;
--(UIViewController*) appViewController;
+/*
+ // see initWithWebView implementation
+ - (void) onPause {}
+ - (void) onResume {}
+ - (void) onOrientationWillChange {}
+ - (void) onOrientationDidChange {}
+ */
 
-- (void) writeJavascript:(NSString*)javascript;
-- (void) clearCaches;
+- (PhoneGapDelegate*) appDelegate;
+- (UIViewController*) appViewController;
+
+- (NSString*) writeJavascript:(NSString*)javascript;
+- (BOOL) verifyArguments:(NSMutableArray*)arguments withExpectedCount:(NSUInteger)expectedCount andCallbackId:(NSString*)callbackId 
+		  callerFileName:(const char*)callerFileName callerFunctionName:(const char*)callerFunctionName;
 
 @end

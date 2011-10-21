@@ -8,12 +8,11 @@
 #import <Foundation/Foundation.h>
 #import "PGPlugin.h"
 
-@class Reachability;
 
-__attribute__ ((deprecated)) @interface Network : PGPlugin {
-		
+@interface PGSplashScreen : PGPlugin {
 }
 
-- (void) isReachable:(NSMutableArray*)arguments withDict:(NSMutableDictionary*)options;
+- (void) show:(NSArray*)arguments withDict:(NSMutableDictionary*)options;
+- (void) hide:(NSArray*)arguments withDict:(NSMutableDictionary*)options;
 
 @end

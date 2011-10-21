@@ -40,6 +40,7 @@
 @property (nonatomic, retain) NSURL *invokedURL;
 @property (assign) BOOL loadFromString;
 @property (assign) UIInterfaceOrientation orientationType;
+@property (nonatomic, retain) NSString *sessionKey;
 
 + (NSDictionary*)getBundlePlist:(NSString *)plistName;
 + (NSString*) wwwFolderName;
@@ -60,7 +61,11 @@
 - (void)applicationWillResignActive:(UIApplication *)application;
 - (void)applicationWillTerminate:(UIApplication *)application;
 
+@end
 
+@interface NSDictionary (LowercaseKeys)
 
+- (NSDictionary*) dictionaryWithLowercaseKeys;
 
 @end
+

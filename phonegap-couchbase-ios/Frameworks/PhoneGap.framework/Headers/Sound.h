@@ -12,52 +12,89 @@
 
 #import "PGPlugin.h"
 
-@interface AudioFile : NSObject
+
+
+
+enum MediaError {
+	MEDIA_ERR_ABORTED = 1,
+	MEDIA_ERR_NETWORK = 2,
+	MEDIA_ERR_DECODE = 3,
+	MEDIA_ERR_NONE_SUPPORTED = 4
+};
+typedef NSUInteger MediaError;
+
+enum MediaStates {
+	MEDIA_NONE = 0,
+	MEDIA_STARTING = 1,
+	MEDIA_RUNNING = 2,
+	MEDIA_PAUSED = 3,
+	MEDIA_STOPPED = 4
+};
+typedef NSUInteger MediaStates;
+
+enum MediaMsg {
+	MEDIA_STATE = 1,
+	MEDIA_DURATION = 2,
+    MEDIA_POSITION = 3,
+	MEDIA_ERROR = 9
+};
+typedef NSUInteger MediaMsg;
+
+@interface AudioPlayer : AVAudioPlayer
 {
-	NSString* successCallback;
-	NSString* errorCallback;
-	NSString* downloadCompleteCallback;
+	NSString* mediaId;
+}
+@property (nonatomic,copy) NSString* mediaId;
+@end
+
+#ifdef __IPHONE_3_0
+@interface AudioRecorder : AVAudioRecorder
+{
+	NSString* mediaId;
+}
+@property (nonatomic,copy) NSString* mediaId;
+@end
+#endif
+	
+@interface PGAudioFile : NSObject
+{
 	NSString* resourcePath;
 	NSURL* resourceURL;
-	AVAudioPlayer* player;
+	AudioPlayer* player;
 #ifdef __IPHONE_3_0
-	AVAudioRecorder* recorder;
+	AudioRecorder* recorder;
 #endif
 }
 
-@property (nonatomic, copy) NSString* resourcePath;
-@property (nonatomic, copy) NSURL* resourceURL;
-@property (nonatomic, copy) NSString* successCallback;
-@property (nonatomic, copy) NSString* errorCallback;
-@property (nonatomic, copy) NSString* downloadCompleteCallback;
-@property (nonatomic, retain) AVAudioPlayer* player;
+@property (nonatomic, retain) NSString* resourcePath;
+@property (nonatomic, retain) NSURL* resourceURL;
+@property (nonatomic, retain) AudioPlayer* player;
 
 #ifdef __IPHONE_3_0
-@property (nonatomic, retain) AVAudioRecorder* recorder;
+@property (nonatomic, retain) AudioRecorder* recorder;
 #endif
 
 @end
 
-@interface Sound : PGPlugin 
-<AVAudioPlayerDelegate
-#ifdef __IPHONE_3_0
-, AVAudioRecorderDelegate
-#endif
->
+@interface PGSound : PGPlugin <AVAudioPlayerDelegate, AVAudioRecorderDelegate>
 {
 	NSMutableDictionary* soundCache;
-	AudioFile* audFile;
 }
+@property (nonatomic, retain) NSMutableDictionary* soundCache;
 
 - (void) play:(NSMutableArray*)arguments withDict:(NSMutableDictionary*)options;
 - (void) pause:(NSMutableArray*)arguments withDict:(NSMutableDictionary*)options;
 - (void) stop:(NSMutableArray*)arguments withDict:(NSMutableDictionary*)options;
-- (NSURL*) urlForResource:(NSString*)resourcePath;
-- (AudioFile*) audioFileForResource:(NSString*) resourcePath;
+- (void) release:(NSMutableArray*)arguments withDict:(NSMutableDictionary*)options;
+- (void) getCurrentPosition:(NSMutableArray*)arguments withDict:(NSMutableDictionary*)options;
+- (void) prepare:(NSMutableArray*)arguments withDict:(NSMutableDictionary*)options;
 
-#ifdef __IPHONE_3_0
+// helper methods
+- (PGAudioFile*) audioFileForResource:(NSString*) resourcePath withId: (NSString*)mediaId;
+- (BOOL) prepareToPlay: (PGAudioFile*) audioFile withId: (NSString*)mediaId;
+
+
 - (void) startAudioRecord:(NSMutableArray*)arguments withDict:(NSMutableDictionary*)options;
 - (void) stopAudioRecord:(NSMutableArray*)arguments withDict:(NSMutableDictionary*)options;
-#endif
 
 @end

@@ -42,8 +42,8 @@
 		0A97D2531451DB5100243BAF /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A97D2501451DB5100243BAF /* libz.dylib */; };
 		0A97D2541451DB5100243BAF /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A97D2511451DB5100243BAF /* Security.framework */; };
 		0A97D25A1451DCAE00243BAF /* Couchbase.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A97D2581451DCAE00243BAF /* Couchbase.framework */; };
-		0A97D25B1451DCAE00243BAF /* PhoneGap.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A97D2591451DCAE00243BAF /* PhoneGap.framework */; };
 		0A97D25D1451DD4C00243BAF /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A97D25C1451DD4C00243BAF /* CoreMedia.framework */; };
+		0ABAF7401451E67400E2FC1C /* PhoneGap.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0ABAF73F1451E67400E2FC1C /* PhoneGap.framework */; };
 		0ACE25BC13AE116100BFCFB0 /* mycouchapp.json in Resources */ = {isa = PBXBuildFile; fileRef = 0ACE25B613AE116100BFCFB0 /* mycouchapp.json */; };
 		0ACE25BD13AE116100BFCFB0 /* mycouchapp.version in Resources */ = {isa = PBXBuildFile; fileRef = 0ACE25B713AE116100BFCFB0 /* mycouchapp.version */; };
 		0ACE25BE13AE116100BFCFB0 /* mydata_views.json in Resources */ = {isa = PBXBuildFile; fileRef = 0ACE25B813AE116100BFCFB0 /* mydata_views.json */; };
@@ -103,8 +103,8 @@
 		0A97D2501451DB5100243BAF /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 		0A97D2511451DB5100243BAF /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		0A97D2581451DCAE00243BAF /* Couchbase.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Couchbase.framework; path = Frameworks/Couchbase.framework; sourceTree = "<group>"; };
-		0A97D2591451DCAE00243BAF /* PhoneGap.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PhoneGap.framework; path = Frameworks/PhoneGap.framework; sourceTree = "<group>"; };
 		0A97D25C1451DD4C00243BAF /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
+		0ABAF73F1451E67400E2FC1C /* PhoneGap.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PhoneGap.framework; path = Frameworks/PhoneGap.framework; sourceTree = "<group>"; };
 		0ACE25B613AE116100BFCFB0 /* mycouchapp.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = mycouchapp.json; path = Resources/mycouchapp.json; sourceTree = "<group>"; };
 		0ACE25B713AE116100BFCFB0 /* mycouchapp.version */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = mycouchapp.version; path = Resources/mycouchapp.version; sourceTree = "<group>"; };
 		0ACE25B813AE116100BFCFB0 /* mydata_views.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = mydata_views.json; path = Resources/mydata_views.json; sourceTree = "<group>"; };
@@ -135,7 +135,7 @@
 				0A1A730913A4D09F00850912 /* SystemConfiguration.framework in Frameworks */,
 				0A1A730B13A4D09F00850912 /* MobileCoreServices.framework in Frameworks */,
 				0A97D25A1451DCAE00243BAF /* Couchbase.framework in Frameworks */,
-				0A97D25B1451DCAE00243BAF /* PhoneGap.framework in Frameworks */,
+				0ABAF7401451E67400E2FC1C /* PhoneGap.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -172,8 +172,8 @@
 		0A1A72F313A4D09F00850912 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				0ABAF73F1451E67400E2FC1C /* PhoneGap.framework */,
 				0A97D2581451DCAE00243BAF /* Couchbase.framework */,
-				0A97D2591451DCAE00243BAF /* PhoneGap.framework */,
 				0A97D2511451DB5100243BAF /* Security.framework */,
 				0A1A72F413A4D09F00850912 /* Foundation.framework */,
 				0A1A72F613A4D09F00850912 /* UIKit.framework */,

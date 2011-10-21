@@ -1,5 +1,5 @@
 /*
- * PhoneGap is available under *either* the terms of the modified BSD license *or* the
+ * PhoneGap v1.0.0 is available under *either* the terms of the modified BSD license *or* the
  * MIT License (2008). See http://opensource.org/licenses/alphabetical for full text.
  * 
  * Copyright (c) 2005-2010, Nitobi Software Inc.
@@ -164,9 +164,9 @@ PhoneGap.addConstructor = function(func) {
 				} 
 				catch(e) 
 				{
-					if (typeof(debug['log']) == 'function')
+					if (typeof(console['log']) == 'function')
 					{
-						debug.log("Failed to run constructor: " + debug.processMessage(e));
+						console.log("Failed to run constructor: " + console.processMessage(e));
 					}
 					else
 					{
@@ -182,6 +182,8 @@ PhoneGap.addConstructor = function(func) {
     }, 1);
 })();
 
+// session id for calls
+PhoneGap.sessionKey = 0;
 
 // centralized callbacks
 PhoneGap.callbackId = 0;
@@ -241,11 +243,12 @@ PhoneGap.run_command = function() {
     PhoneGap.queue.ready = false;
 
     if(!this.gapBridge){
-        this.gapBridge = document.createElement("IFRAME");
-	this.gapBridge.setAttribute("height","0px");
-	this.gapBridge.setAttribute("width","0px");
-	this.gapBridge.setAttribute("frameborder","0");
-	document.documentElement.appendChild(this.gapBridge);
+        this.gapBridge = document.createElement("iframe");
+		this.gapBridge.setAttribute("style", "display:none;");
+		this.gapBridge.setAttribute("height","0px");
+		this.gapBridge.setAttribute("width","0px");
+		this.gapBridge.setAttribute("frameborder","0");
+		document.documentElement.appendChild(this.gapBridge);
     }
 
     var args = PhoneGap.queue.commands.shift();
@@ -285,7 +288,8 @@ PhoneGap.run_command = function() {
             	uri.push(encodeURIComponent(arg));
     	}
     	var next = callbackId != null  ?  ("/" + callbackId + "/") : "/";
-    	var url = "gap://" + service + next + uri.join("/");
+        //add the sessionId in the user field of the URL conforming to RFC1808
+        var url = "gap://" + PhoneGap.sessionKey + "@" + service + next + uri.join("/");
 
     	if (dict != null) {
         	url += "?" + encodeURIComponent(JSON.stringify(dict));
@@ -431,22 +435,55 @@ document.removeEventListener = function(evt, handler, capture)
 /**
  * Method to fire event from native code
  */
-PhoneGap.fireEvent = function(type) {
+PhoneGap.fireEvent = function(type, target) {
     var e = document.createEvent('Events');
     e.initEvent(type);
-    document.dispatchEvent(e);
+
+	target = target || document;
+	if (target.dispatchEvent === undefined) { // ie window.dispatchEvent is undefined in iOS 3.x
+		target = document;
+	} 
+
+    target.dispatchEvent(e);
 };
 
-};if (!PhoneGap.hasResource("debugconsole")) {
+/**
+ * Create a UUID
+ *
+ * @return
+ */
+PhoneGap.createUUID = function() {
+    return PhoneGap.UUIDcreatePart(4) + '-' +
+        PhoneGap.UUIDcreatePart(2) + '-' +
+        PhoneGap.UUIDcreatePart(2) + '-' +
+        PhoneGap.UUIDcreatePart(2) + '-' +
+        PhoneGap.UUIDcreatePart(6);
+};
+
+PhoneGap.UUIDcreatePart = function(length) {
+    var uuidpart = "";
+    for (var i=0; i<length; i++) {
+        var uuidchar = parseInt((Math.random() * 256)).toString(16);
+        if (uuidchar.length == 1) {
+            uuidchar = "0" + uuidchar;
+        }
+        uuidpart += uuidchar;
+    }
+    return uuidpart;
+};
+};
+
+
+if (!PhoneGap.hasResource("debugconsole")) {
 	PhoneGap.addResource("debugconsole");
 	
 /**
  * This class provides access to the debugging console.
  * @constructor
  */
-DebugConsole = function(isDeprecated) {
+var DebugConsole = function() {
+    this.winConsole = window.console;
     this.logLevel = DebugConsole.INFO_LEVEL;
-    this.isDeprecated = isDeprecated ? true : false;
 }
 
 // from most verbose, to least verbose
@@ -498,7 +535,7 @@ DebugConsole.prototype.processMessage = function(message, maxDepth) {
             return str;
         }
         
-        return ((this.isDeprecated ? "WARNING: debug object is deprecated, please use console object\n" :  "") + "Object:\n" + makeStructured(message, maxDepth));
+        return ("Object:\n" + makeStructured(message, maxDepth));
     }
 };
 
@@ -508,12 +545,11 @@ DebugConsole.prototype.processMessage = function(message, maxDepth) {
  */
 DebugConsole.prototype.log = function(message, maxDepth) {
     if (PhoneGap.available && this.logLevel <= DebugConsole.INFO_LEVEL)
-        PhoneGap.exec('DebugConsole.log',
-            this.processMessage(message, maxDepth),
-            { logLevel: 'INFO' }
+        PhoneGap.exec(null, null, 'com.phonegap.debugconsole', 'log',
+            [ this.processMessage(message, maxDepth), { logLevel: 'INFO' } ]
         );
     else
-        console.log(message);
+        this.winConsole.log(message);
 };
 
 /**
@@ -522,12 +558,11 @@ DebugConsole.prototype.log = function(message, maxDepth) {
  */
 DebugConsole.prototype.warn = function(message, maxDepth) {
     if (PhoneGap.available && this.logLevel <= DebugConsole.WARN_LEVEL)
-        PhoneGap.exec('DebugConsole.log',
-            this.processMessage(message, maxDepth),
-            { logLevel: 'WARN' }
+    	PhoneGap.exec(null, null, 'com.phonegap.debugconsole', 'log',
+            [ this.processMessage(message, maxDepth), { logLevel: 'WARN' } ]
         );
     else
-        console.error(message);
+        this.winConsole.error(message);
 };
 
 /**
@@ -536,17 +571,15 @@ DebugConsole.prototype.warn = function(message, maxDepth) {
  */
 DebugConsole.prototype.error = function(message, maxDepth) {
     if (PhoneGap.available && this.logLevel <= DebugConsole.ERROR_LEVEL)
-        PhoneGap.exec('DebugConsole.log',
-            this.processMessage(message, maxDepth),
-            { logLevel: 'ERROR' }
+		PhoneGap.exec(null, null, 'com.phonegap.debugconsole', 'log',
+            [ this.processMessage(message, maxDepth), { logLevel: 'ERROR' } ]
         );
     else
-        console.error(message);
+        this.winConsole.error(message);
 };
 
 PhoneGap.addConstructor(function() {
     window.console = new DebugConsole();
-    window.debug = new DebugConsole(true);
 });
 };
 if (!PhoneGap.hasResource("position")) {
@@ -772,7 +805,7 @@ Accelerometer.prototype.watchAcceleration = function(successCallback, errorCallb
 	var updatedOptions = {
 		desiredFrequency:frequency 
 	}
-	PhoneGap.exec("Accelerometer.start",options);
+	PhoneGap.exec(null, null, "com.phonegap.accelerometer", "start", [options]);
 
 	return setInterval(function() {
 		navigator.accelerometer.getCurrentAcceleration(successCallback, errorCallback, options);
@@ -784,26 +817,99 @@ Accelerometer.prototype.watchAcceleration = function(successCallback, errorCallb
  * @param {String} watchId The ID of the watch returned from #watchAcceleration.
  */
 Accelerometer.prototype.clearWatch = function(watchId) {
-	PhoneGap.exec("Accelerometer.stop");
+	PhoneGap.exec(null, null, "com.phonegap.accelerometer", "stop", []);
 	clearInterval(watchId);
 };
 
-PhoneGap.addConstructor(function() {
-    if (typeof navigator.accelerometer == "undefined") navigator.accelerometer = new Accelerometer();
-});
+Accelerometer.install = function()
+{
+    if (typeof navigator.accelerometer == "undefined") {
+		navigator.accelerometer = new Accelerometer();
+	}
+};
+
+Accelerometer.installDeviceMotionHandler = function()
+{
+	if (!(window.DeviceMotionEvent == undefined)) {
+		// supported natively, so we don't have to add support
+		return;
+	}	
+	
+	var self = this;
+	var devicemotionEvent = 'devicemotion';
+	self.deviceMotionWatchId = null;
+	self.deviceMotionListenerCount = 0;
+	self.deviceMotionLastEventTimestamp = 0;
+	
+	// backup original `window.addEventListener`, `window.removeEventListener`
+    var _addEventListener = window.addEventListener;
+    var _removeEventListener = window.removeEventListener;
+													
+	var windowDispatchAvailable = !(window.dispatchEvent === undefined); // undefined in iOS 3.x
+													
+	var accelWin = function(acceleration) {
+		var evt = document.createEvent('Events');
+	    evt.initEvent(devicemotionEvent);
+	
+		evt.acceleration = null; // not all devices have gyroscope, don't care for now if we actually have it.
+		evt.rotationRate = null; // not all devices have gyroscope, don't care for now if we actually have it:
+		evt.accelerationIncludingGravity = acceleration; // accelerometer, all iOS devices have it
+		
+		var currentTime = new Date().getTime();
+		evt.interval =  (self.deviceMotionLastEventTimestamp == 0) ? 0 : (currentTime - self.deviceMotionLastEventTimestamp);
+		self.deviceMotionLastEventTimestamp = currentTime;
+		
+		if (windowDispatchAvailable) {
+			window.dispatchEvent(evt);
+		} else {
+			document.dispatchEvent(evt);
+		}
+	};
+	
+	var accelFail = function() {
+		
+	};
+													
+    // override `window.addEventListener`
+    window.addEventListener = function() {
+        if (arguments[0] === devicemotionEvent) {
+            ++(self.deviceMotionListenerCount);
+			if (self.deviceMotionListenerCount == 1) { // start
+				self.deviceMotionWatchId = navigator.accelerometer.watchAcceleration(accelWin, accelFail, { frequency:500});
+			}
+		} 
+													
+		if (!windowDispatchAvailable) {
+			return document.addEventListener.apply(this, arguments);
+		} else {
+			return _addEventListener.apply(this, arguments);
+		}
+    };	
+
+    // override `window.removeEventListener'
+    window.removeEventListener = function() {
+        if (arguments[0] === devicemotionEvent) {
+            --(self.deviceMotionListenerCount);
+			if (self.deviceMotionListenerCount == 0) { // stop
+				navigator.accelerometer.clearWatch(self.deviceMotionWatchId);
+			}
+		} 
+		
+		if (!windowDispatchAvailable) {
+			return document.removeEventListener.apply(this, arguments);
+		} else {
+			return _removeEventListener.apply(this, arguments);
+		}
+    };	
+};
+
+
+PhoneGap.addConstructor(Accelerometer.install);
+PhoneGap.addConstructor(Accelerometer.installDeviceMotionHandler);
+
 };if (!PhoneGap.hasResource("camera")) {
 	PhoneGap.addResource("camera");
 	
-// adding in preparation to switch to Media capture API
-CaptureError = function() {
-   this.code = null;
-}
-
-// capture error codes
-CaptureError.CAPTURE_INTERNAL_ERR = 0;
-CaptureError.CAPTURE_APPLICATION_BUSY = 1;
-CaptureError.CAPTURE_INVALID_ARGUMENT = 2;
-CaptureError.CAPTURE_NO_MEDIA_FILES = 3;
 
 /**
  * This class provides access to the device camera.
@@ -812,9 +918,18 @@ CaptureError.CAPTURE_NO_MEDIA_FILES = 3;
 Camera = function() {
 	
 }
-
 /**
- * Format of image that returned from getPicture.
+ *  Available Camera Options
+ *  {boolean} allowEdit - true to allow editing image, default = false
+ *	{number} quality 0-100 (low to high) default =  100
+ *  {Camera.DestinationType} destinationType default = DATA_URL
+ *	{Camera.PictureSourceType} sourceType default = CAMERA
+ *	{number} targetWidth - width in pixels to scale image default = 0 (no scaling)
+ *  {number} targetHeight - height in pixels to scale image default = 0 (no scaling)
+ *  {Camera.EncodingType} - encodingType default = JPEG
+ */
+/**
+ * Format of image that is returned from getPicture.
  *
  * Example: navigator.camera.getPicture(success, fail,
  *              { quality: 80,
@@ -823,7 +938,7 @@ Camera = function() {
  */
 Camera.DestinationType = {
     DATA_URL: 0,                // Return base64 encoded string
-    FILE_URI: 1                 // Return file uri (content://media/external/images/media/2 for Android)
+    FILE_URI: 1                 // Return file uri 
 };
 Camera.prototype.DestinationType = Camera.DestinationType;
 
@@ -841,6 +956,21 @@ Camera.PictureSourceType = {
     SAVEDPHOTOALBUM : 2         // Choose image from picture library 
 };
 Camera.prototype.PictureSourceType = Camera.PictureSourceType;
+
+/** 
+ * Encoding of image returned from getPicture. 
+ * 
+ * Example: navigator.camera.getPicture(success, fail, 
+ *              { quality: 80, 
+ *                destinationType: Camera.DestinationType.DATA_URL, 
+ *                sourceType: Camera.PictureSourceType.CAMERA, 
+ *                encodingType: Camera.EncodingType.PNG}) 
+ */ 
+Camera.EncodingType = { 
+	JPEG: 0,                    // Return JPEG encoded image 
+	PNG: 1                      // Return PNG encoded image 
+};
+Camera.prototype.EncodingType = Camera.EncodingType;
 
 /**
  * Gets a picture from source defined by "options.sourceType", and returns the
@@ -865,13 +995,210 @@ Camera.prototype.getPicture = function(successCallback, errorCallback, options) 
         return;
     }
 	
-	PhoneGap.exec(successCallback, errorCallback, "Camera","getPicture",[options]);
+	PhoneGap.exec(successCallback, errorCallback, "com.phonegap.camera","getPicture",[options]);
 };
 
 
 
 PhoneGap.addConstructor(function() {
     if (typeof navigator.camera == "undefined") navigator.camera = new Camera();
+});
+};
+
+
+if (!PhoneGap.hasResource("capture")) {
+	PhoneGap.addResource("capture");
+/**
+ * The CaptureError interface encapsulates all errors in the Capture API.
+ */
+function CaptureError() {
+   this.code = null;
+};
+
+// Capture error codes
+CaptureError.CAPTURE_INTERNAL_ERR = 0;
+CaptureError.CAPTURE_APPLICATION_BUSY = 1;
+CaptureError.CAPTURE_INVALID_ARGUMENT = 2;
+CaptureError.CAPTURE_NO_MEDIA_FILES = 3;
+CaptureError.CAPTURE_NOT_SUPPORTED = 20;
+
+/**
+ * The Capture interface exposes an interface to the camera and microphone of the hosting device.
+ */
+function Capture() {
+	this.supportedAudioModes = [];
+	this.supportedImageModes = [];
+	this.supportedVideoModes = [];
+};
+
+/**
+ * Launch audio recorder application for recording audio clip(s).
+ * 
+ * @param {Function} successCB
+ * @param {Function} errorCB
+ * @param {CaptureAudioOptions} options
+ *
+ * No audio recorder to launch for iOS - return CAPTURE_NOT_SUPPORTED
+ */
+Capture.prototype.captureAudio = function(successCallback, errorCallback, options) {
+	/*if (errorCallback && typeof errorCallback === "function") {
+		errorCallback({
+				"code": CaptureError.CAPTURE_NOT_SUPPORTED
+			});
+	}*/
+    PhoneGap.exec(successCallback, errorCallback, "com.phonegap.mediacapture", "captureAudio", [options]);
+};
+
+/**
+ * Launch camera application for taking image(s).
+ * 
+ * @param {Function} successCB
+ * @param {Function} errorCB
+ * @param {CaptureImageOptions} options
+ */
+Capture.prototype.captureImage = function(successCallback, errorCallback, options) {
+    PhoneGap.exec(successCallback, errorCallback, "com.phonegap.mediacapture", "captureImage", [options]);
+};
+
+/**
+ * Launch camera application for taking image(s).
+ * 
+ * @param {Function} successCB
+ * @param {Function} errorCB
+ * @param {CaptureImageOptions} options
+ */
+Capture.prototype._castMediaFile = function(pluginResult) {
+    var mediaFiles = [];
+    var i;
+    for (i=0; i<pluginResult.message.length; i++) {
+        var mediaFile = new MediaFile();
+	    mediaFile.name = pluginResult.message[i].name;
+	    mediaFile.fullPath = pluginResult.message[i].fullPath;
+	    mediaFile.type = pluginResult.message[i].type;
+	    mediaFile.lastModifiedDate = pluginResult.message[i].lastModifiedDate;
+	    mediaFile.size = pluginResult.message[i].size;
+        mediaFiles.push(mediaFile);
+    }
+    pluginResult.message = mediaFiles;
+    return pluginResult;
+};
+
+/**
+ * Launch device camera application for recording video(s).
+ * 
+ * @param {Function} successCB
+ * @param {Function} errorCB
+ * @param {CaptureVideoOptions} options
+ */
+Capture.prototype.captureVideo = function(successCallback, errorCallback, options) {
+    PhoneGap.exec(successCallback, errorCallback, "com.phonegap.mediacapture", "captureVideo", [options]);
+};
+
+/**
+ * Encapsulates a set of parameters that the capture device supports.
+ */
+function ConfigurationData() {
+    // The ASCII-encoded string in lower case representing the media type. 
+    this.type; 
+    // The height attribute represents height of the image or video in pixels. 
+    // In the case of a sound clip this attribute has value 0. 
+    this.height = 0;
+    // The width attribute represents width of the image or video in pixels. 
+    // In the case of a sound clip this attribute has value 0
+    this.width = 0;
+};
+
+/**
+ * Encapsulates all image capture operation configuration options.
+ */
+var CaptureImageOptions = function() {
+    // Upper limit of images user can take. Value must be equal or greater than 1.
+    this.limit = 1; 
+    // The selected image mode. Must match with one of the elements in supportedImageModes array.
+    this.mode = null; 
+};
+
+/**
+ * Encapsulates all video capture operation configuration options.
+ */
+var CaptureVideoOptions = function() {
+    // Upper limit of videos user can record. Value must be equal or greater than 1.
+    this.limit = 1;
+    // Maximum duration of a single video clip in seconds.
+    this.duration = 0;
+    // The selected video mode. Must match with one of the elements in supportedVideoModes array.
+    this.mode = null;
+};
+
+/**
+ * Encapsulates all audio capture operation configuration options.
+ */
+var CaptureAudioOptions = function() {
+    // Upper limit of sound clips user can record. Value must be equal or greater than 1.
+    this.limit = 1;
+    // Maximum duration of a single sound clip in seconds.
+    this.duration = 0;
+    // The selected audio mode. Must match with one of the elements in supportedAudioModes array.
+    this.mode = null;
+};
+
+/**
+ * Represents a single file.
+ * 
+ * name {DOMString} name of the file, without path information
+ * fullPath {DOMString} the full path of the file, including the name
+ * type {DOMString} mime type
+ * lastModifiedDate {Date} last modified date
+ * size {Number} size of the file in bytes
+ */
+function MediaFile(name, fullPath, type, lastModifiedDate, size) {
+    this.name = name || null;
+    this.fullPath = fullPath || null;
+    this.type = type || null;
+    this.lastModifiedDate = lastModifiedDate || null;
+    this.size = size || 0;
+}
+
+/**
+ * Request capture format data for a specific file and type
+ * 
+ * @param {Function} successCB
+ * @param {Function} errorCB
+ */
+MediaFile.prototype.getFormatData = function(successCallback, errorCallback) {
+	if (typeof this.fullPath === "undefined" || this.fullPath === null) {
+		errorCallback({
+				"code": CaptureError.CAPTURE_INVALID_ARGUMENT
+			});
+	} else {
+    	PhoneGap.exec(successCallback, errorCallback, "com.phonegap.mediacapture", "getFormatData", [this.fullPath, this.type]);
+	}	
+};
+
+/**
+ * MediaFileData encapsulates format information of a media file.
+ * 
+ * @param {DOMString} codecs
+ * @param {long} bitrate
+ * @param {long} height
+ * @param {long} width
+ * @param {float} duration
+ */
+function MediaFileData(codecs, bitrate, height, width, duration) {
+    this.codecs = codecs || null;
+    this.bitrate = bitrate || 0;
+    this.height = height || 0;
+    this.width = width || 0;
+    this.duration = duration || 0;
+}
+
+PhoneGap.addConstructor(function() {
+    if (typeof navigator.device === "undefined") {
+        navigator.device = window.device = new Device();
+    }
+    if (typeof navigator.device.capture === "undefined") {
+        navigator.device.capture = window.device.capture = new Capture();
+    }
 });
 };
 if (!PhoneGap.hasResource("contact")) {
@@ -889,16 +1216,14 @@ if (!PhoneGap.hasResource("contact")) {
 * @param {ContactAddress[]} addresses array of addresses
 * @param {ContactField[]} ims instant messaging user ids
 * @param {ContactOrganization[]} organizations
-* @param {DOMString} revision date contact was last updated
 * @param {DOMString} birthday contact's birthday
-* @param {DOMString} gender contact's gender
 * @param {DOMString} note user notes about contact
 * @param {ContactField[]} photos
+* @param {Array.<ContactField>} categories
 * @param {ContactField[]} urls contact's web sites
-* @param {DOMString} timezone UTC time zone offset
 */
 var Contact = function(id, displayName, name, nickname, phoneNumbers, emails, addresses,
-    ims, organizations, revision, birthday, gender, note, photos, categories, urls, timezone) {
+    ims, organizations, birthday, note, photos, categories, urls) {
     this.id = id || null;
     this.displayName = displayName || null;
     this.name = name || null; // ContactName
@@ -908,14 +1233,11 @@ var Contact = function(id, displayName, name, nickname, phoneNumbers, emails, ad
     this.addresses = addresses || null; // ContactAddress[]
     this.ims = ims || null; // ContactField[]
     this.organizations = organizations || null; // ContactOrganization[]
-    this.revision = revision || null; // JS Date
     this.birthday = birthday || null; // JS Date
-    this.gender = gender || null;
     this.note = note || null;
     this.photos = photos || null; // ContactField[]
     this.categories = categories || null; 
     this.urls = urls || null; // ContactField[]
-    this.timezone = timezone || null;
 };
 
 /**
@@ -923,7 +1245,7 @@ var Contact = function(id, displayName, name, nickname, phoneNumbers, emails, ad
 */
 Contact.prototype.convertDatesOut = function()
 {
-	var dates = new Array("revision", "birthday");
+	var dates = new Array("birthday");
 	for (var i=0; i<dates.length; i++){
 		var value = this[dates[i]];
 		if (value){
@@ -947,7 +1269,7 @@ Contact.prototype.convertDatesOut = function()
 */
 Contact.prototype.convertDatesIn = function()
 {
-	var dates = new Array("revision", "birthday");
+	var dates = new Array("birthday");
 	for (var i=0; i<dates.length; i++){
 		var value = this[dates[i]];
 		if (value){
@@ -967,27 +1289,34 @@ Contact.prototype.convertDatesIn = function()
 Contact.prototype.remove = function(successCB, errorCB) {
 	if (this.id == null) {
         var errorObj = new ContactError();
-        errorObj.code = ContactError.NOT_FOUND_ERROR;
+        errorObj.code = ContactError.UNKNOWN_ERROR;
         errorCB(errorObj);
     }
     else {
-        PhoneGap.exec(successCB, errorCB, "Contacts", "remove", [{ "contact": this}]);
+        PhoneGap.exec(successCB, errorCB, "com.phonegap.contacts", "remove", [{ "contact": this}]);
     }
 };
 /**
 * iOS ONLY
 * displays contact via iOS UI
+*	NOT part of W3C spec so no official documentation
 *
 * @param errorCB error callback
+* @param options object
+*	allowsEditing: boolean AS STRING
+*		"true" to allow editing the contact
+*		"false" (default) display contact
 */
-Contact.prototype.display = function(successCB, errorCB, options) { 
+Contact.prototype.display = function(errorCB, options) { 
 	if (this.id == null) {
-        var errorObj = new ContactError();
-        errorObj.code = ContactError.NOT_FOUND_ERROR;
-        errorCB(errorObj);
+        if (typeof errorCB == "function") {
+        	var errorObj = new ContactError();
+        	errorObj.code = ContactError.UNKNOWN_ERROR;
+        	errorCB(errorObj);
+		}
     }
     else {
-        PhoneGap.exec(successCB, errorCB, "Contacts","displayContact", [this.id, options]);
+        PhoneGap.exec(null, errorCB, "com.phonegap.contacts","displayContact", [this.id, options]);
     }
 };
 
@@ -1047,7 +1376,7 @@ Contact.prototype.save = function(successCB, errorCB) {
 	// don't modify the original contact
 	var cloned = PhoneGap.clone(this);
 	cloned.convertDatesOut(); 
-	PhoneGap.exec(successCB, errorCB, "Contacts","save", [{"contact": cloned}]);
+	PhoneGap.exec(successCB, errorCB, "com.phonegap.contacts","save", [{"contact": cloned}]);
 };
 
 /**
@@ -1072,7 +1401,7 @@ var ContactName = function(formatted, familyName, givenName, middle, prefix, suf
 * Generic contact field.
 * @param type
 * @param value
-* @param primary
+* @param pref
 * @param id
 */
 var ContactField = function(type, value, pref, id) {
@@ -1084,6 +1413,8 @@ var ContactField = function(type, value, pref, id) {
 
 /**
 * Contact address.
+* @param pref - boolean is primary / preferred address
+* @param type - string - work, home…..
 * @param formatted
 * @param streetAddress
 * @param locality
@@ -1091,7 +1422,9 @@ var ContactField = function(type, value, pref, id) {
 * @param postalCode
 * @param country
 */
-var ContactAddress = function(formatted, streetAddress, locality, region, postalCode, country, id) {
+var ContactAddress = function(pref, type, formatted, streetAddress, locality, region, postalCode, country, id) {
+	this.pref = pref != "undefined" ? pref : null;
+	this.type = type != "undefined" ? type : null;
     this.formatted = formatted != "undefined" ? formatted : null;
     this.streetAddress = streetAddress != "undefined" ? streetAddress : null;
     this.locality = locality != "undefined" ? locality : null;
@@ -1103,22 +1436,18 @@ var ContactAddress = function(formatted, streetAddress, locality, region, postal
 
 /**
 * Contact organization.
+* @param pref - boolean is primary / preferred address
+* @param type - string - work, home…..
 * @param name
 * @param dept
 * @param title
-* @param startDate
-* @param endDate
-* @param location
-* @param desc
 */
-var ContactOrganization = function(name, dept, title, startDate, endDate, location, desc) {
+var ContactOrganization = function(pref, type, name, dept, title) {
+	this.pref = pref != "undefined" ? pref : null;
+	this.type = type != "undefined" ? type : null;
     this.name = name != "undefined" ? name : null;
     this.department = dept != "undefined" ? dept : null;
     this.title = title != "undefined" ? title : null;
-    this.startDate = startDate != "undefined" ? startDate : null;
-    this.endDate = endDate != "undefined" ? endDate : null;
-    this.location = location != "undefined" ? location : null;
-    this.description = desc != "undefined" ? desc : null;
 };
 
 /**
@@ -1127,11 +1456,11 @@ var ContactOrganization = function(name, dept, title, startDate, endDate, locati
 * @param username
 * @param userid
 */
-var ContactAccount = function(domain, username, userid) {
+/*var ContactAccount = function(domain, username, userid) {
     this.domain = domain != "undefined" ? domain : null;
     this.username = username != "undefined" ? username : null;
     this.userid = userid != "undefined" ? userid : null;
-}
+}*/
 
 /**
 * Represents a group of Contacts.
@@ -1139,8 +1468,6 @@ var ContactAccount = function(domain, username, userid) {
 var Contacts = function() {
     this.inProgress = false;
     this.records = new Array();
-    this.resultsCallback = null;
-    this.errorCallback = null;
 };
 /**
 * Returns an array of Contacts matching the search criteria.
@@ -1151,26 +1478,16 @@ var Contacts = function() {
 * @return array of Contacts matching search criteria
 */
 Contacts.prototype.find = function(fields, successCB, errorCB, options) {
-	var theOptions = options || null;
-	if (theOptions != null){
-		// convert updatedSince to ms
-		var value = theOptions.updatedSince
-		if (value != ''){
-			if (!value instanceof Date){
-				try {
-					value = new Date(value);
-				} catch(exception){
-					value = null;
-				}
-			}
-			if (value instanceof Date){
-				theOptions.updatedSince = value.valueOf();
-			}
-		}
-	}
-
-	PhoneGap.exec(successCB, errorCB, "Contacts","search", [{"fields":fields, "findOptions":theOptions}]);
-	
+	if (successCB === null) {
+        throw new TypeError("You must specify a success callback for the find command.");
+    }
+    if (fields === null || fields === "undefined" || fields.length === "undefined" || fields.length <= 0) {
+    	if (typeof errorCB === "function") {
+			errorCB({"code": ContactError.INVALID_ARGUMENT_ERROR});
+    	}
+    } else {
+		PhoneGap.exec(successCB, errorCB, "com.phonegap.contacts","search", [{"fields":fields, "findOptions":options}]);
+    }
 };
 /**
 * need to turn the array of JSON strings representing contact objects into actual objects
@@ -1182,7 +1499,7 @@ Contacts.prototype._findCallback = function(pluginResult) {
 	var contacts = new Array();
 	try {
 		for (var i=0; i<pluginResult.message.length; i++) {
-			var newContact = navigator.service.contacts.create(pluginResult.message[i]); 
+			var newContact = navigator.contacts.create(pluginResult.message[i]); 
 			newContact.convertDatesIn();
 			contacts.push(newContact);
 		}
@@ -1204,7 +1521,7 @@ Contacts.prototype._contactCallback = function(pluginResult)
 	var newContact = null;
 	if (pluginResult.message){
 		try {
-			newContact = navigator.service.contacts.create(pluginResult.message);
+			newContact = navigator.contacts.create(pluginResult.message);
 			newContact.convertDatesIn();
 		} catch(e){
 			console.log("Error parsing contact");
@@ -1229,11 +1546,11 @@ Contacts.prototype._errCallback = function(pluginResult)
 };
 // iPhone only api to create a new contact via the GUI
 Contacts.prototype.newContactUI = function(successCallback) { 
-    PhoneGap.exec(successCallback, null, "Contacts","newContact", []);
+    PhoneGap.exec(successCallback, null, "com.phonegap.contacts","newContact", []);
 };
 // iPhone only api to select a contact via the GUI
 Contacts.prototype.chooseContact = function(successCallback, options) {
-    PhoneGap.exec(successCallback, null, "Contacts","chooseContact", options);
+    PhoneGap.exec(successCallback, null, "com.phonegap.contacts","chooseContact", options);
 };
 
 
@@ -1245,10 +1562,11 @@ Contacts.prototype.chooseContact = function(successCallback, options) {
 * @returns new Contact object
 */
 Contacts.prototype.create = function(properties) {
+    var i;
     var contact = new Contact();
     for (i in properties) {
-        if (contact[i]!='undefined') {
-            contact[i]=properties[i];
+        if (contact[i] !== 'undefined') {
+            contact[i] = properties[i];
         }
     }
     return contact;
@@ -1258,12 +1576,10 @@ Contacts.prototype.create = function(properties) {
  * ContactFindOptions.
  * @param filter used to match contacts against
  * @param multiple boolean used to determine if more than one contact should be returned
- * @param updatedSince return only contact records that have been updated on or after the given time
  */
 var ContactFindOptions = function(filter, multiple, updatedSince) {
     this.filter = filter || '';
-    this.multiple = multiple || true;
-    this.updatedSince = updatedSince || '';
+    this.multiple = multiple || false;
 };
 
 /**
@@ -1279,19 +1595,19 @@ var ContactError = function() {
  */
 ContactError.UNKNOWN_ERROR = 0;
 ContactError.INVALID_ARGUMENT_ERROR = 1;
-ContactError.NOT_FOUND_ERROR = 2;
-ContactError.TIMEOUT_ERROR = 3;
-ContactError.PENDING_OPERATION_ERROR = 4;
-ContactError.IO_ERROR = 5;
-ContactError.NOT_SUPPORTED_ERROR = 6;
+ContactError.TIMEOUT_ERROR = 2;
+ContactError.PENDING_OPERATION_ERROR = 3;
+ContactError.IO_ERROR = 4;
+ContactError.NOT_SUPPORTED_ERROR = 5;
 ContactError.PERMISSION_DENIED_ERROR = 20;
 
 /**
  * Add the contact interface into the browser.
  */
 PhoneGap.addConstructor(function() { 
-    if(typeof navigator.service == "undefined") navigator.service = new Object();
-    if(typeof navigator.service.contacts == "undefined") navigator.service.contacts = new Contacts();
+    if(typeof navigator.contacts == "undefined") {
+    	navigator.contacts = new Contacts();
+    }
 });
 };
 if (!PhoneGap.hasResource("device")) {
@@ -1326,7 +1642,9 @@ Device = function()
 }
 
 PhoneGap.addConstructor(function() {
-    navigator.device = window.device = new Device();
+	if (typeof navigator.device === "undefined") {
+    	navigator.device = window.device = new Device();
+	}
 });
 };
 if (!PhoneGap.hasResource("file")) {
@@ -1408,35 +1726,31 @@ FileMgr = function() {
 }
 
 FileMgr.prototype.testFileExists = function(fileName, successCallback, errorCallback) {
-    PhoneGap.exec(successCallback, errorCallback, "File", "testFileExists", [fileName]);
+    PhoneGap.exec(successCallback, errorCallback, "com.phonegap.file", "testFileExists", [fileName]);
 };
 
 FileMgr.prototype.testDirectoryExists = function(dirName, successCallback, errorCallback) {
-    PhoneGap.exec(successCallback, errorCallback, "File", "testDirectoryExists", [dirName]);
+    PhoneGap.exec(successCallback, errorCallback, "com.phonegap.file", "testDirectoryExists", [dirName]);
 };
 
 FileMgr.prototype.getFreeDiskSpace = function(successCallback, errorCallback) {
-    PhoneGap.exec(successCallback, errorCallback, "File", "getFreeDiskSpace", []);
-};
-
-FileMgr.prototype.writeAsText = function(fileName, data, bAppend, successCallback, errorCallback) {
-    PhoneGap.exec(successCallback, errorCallback, "File", "write", [fileName, data, bAppend ? 1 : 0]);
+    PhoneGap.exec(successCallback, errorCallback, "com.phonegap.file", "getFreeDiskSpace", []);
 };
 
 FileMgr.prototype.write = function(fileName, data, position, successCallback, errorCallback) {
-    PhoneGap.exec(successCallback, errorCallback, "File", "write", [fileName, data, position]);
+    PhoneGap.exec(successCallback, errorCallback, "com.phonegap.file", "write", [fileName, data, position]);
 };
 
 FileMgr.prototype.truncate = function(fileName, size, successCallback, errorCallback) {
-    PhoneGap.exec(successCallback, errorCallback, "File", "truncateFile", [fileName, size]);
+    PhoneGap.exec(successCallback, errorCallback, "com.phonegap.file", "truncateFile", [fileName, size]);
 };
 
 FileMgr.prototype.readAsText = function(fileName, encoding, successCallback, errorCallback) {
-    PhoneGap.exec(successCallback, errorCallback, "File", "readFile", [fileName, encoding]);
+    PhoneGap.exec(successCallback, errorCallback, "com.phonegap.file", "readFile", [fileName, encoding]);
 };
 
 FileMgr.prototype.readAsDataURL = function(fileName, successCallback, errorCallback) {
-	PhoneGap.exec(successCallback, errorCallback, "File", "readAsDataURL", [fileName]);
+	PhoneGap.exec(successCallback, errorCallback, "com.phonegap.file", "readAsDataURL", [fileName]);
 };
 
 PhoneGap.addConstructor(function() {
@@ -2100,7 +2414,7 @@ LocalFileSystem.prototype.requestFileSystem = function(type, size, successCallba
 		}
 	}
 	else {
-		PhoneGap.exec(successCallback, errorCallback, "File", "requestFileSystem", [type, size]);
+		PhoneGap.exec(successCallback, errorCallback, "com.phonegap.file", "requestFileSystem", [type, size]);
 	}
 };
 
@@ -2111,7 +2425,7 @@ LocalFileSystem.prototype.requestFileSystem = function(type, size, successCallba
  * @param {Function} errorCallback is called with a FileError
  */
 LocalFileSystem.prototype.resolveLocalFileSystemURI = function(uri, successCallback, errorCallback) {
-    PhoneGap.exec(successCallback, errorCallback, "File", "resolveLocalFileSystemURI", [uri]);
+    PhoneGap.exec(successCallback, errorCallback, "com.phonegap.file", "resolveLocalFileSystemURI", [uri]);
 };
 
 /**
@@ -2187,7 +2501,7 @@ LocalFileSystem.prototype._castDate = function(pluginResult) {
         file.type = pluginResult.message.type;
         file.name = pluginResult.message.name;
         file.fullPath = pluginResult.message.fullPath;
-		file.lastModifedDate = new Date(pluginResult.message.lastModifiedDate);
+		file.lastModifiedDate = new Date(pluginResult.message.lastModifiedDate);
 	    pluginResult.message = file;		
 	}
 
@@ -2257,7 +2571,7 @@ DirectoryEntry = function() {
  * @param {Function} errorCallback is called with a FileError
  */
 DirectoryEntry.prototype.copyTo = function(parent, newName, successCallback, errorCallback) {
-    PhoneGap.exec(successCallback, errorCallback, "File", "copyTo", [this.fullPath, parent, newName]);
+    PhoneGap.exec(successCallback, errorCallback, "com.phonegap.file", "copyTo", [this.fullPath, parent, newName]);
 };
 
 /**
@@ -2267,7 +2581,7 @@ DirectoryEntry.prototype.copyTo = function(parent, newName, successCallback, err
  * @param {Function} errorCallback is called with a FileError
  */
 DirectoryEntry.prototype.getMetadata = function(successCallback, errorCallback) {
-    PhoneGap.exec(successCallback, errorCallback, "File", "getMetadata", [this.fullPath]);
+    PhoneGap.exec(successCallback, errorCallback, "com.phonegap.file", "getMetadata", [this.fullPath]);
 };
 
 /**
@@ -2277,7 +2591,7 @@ DirectoryEntry.prototype.getMetadata = function(successCallback, errorCallback) 
  * @param {Function} errorCallback is called with a FileError
  */
 DirectoryEntry.prototype.getParent = function(successCallback, errorCallback) {
-    PhoneGap.exec(successCallback, errorCallback, "File", "getParent", [this.fullPath]);
+    PhoneGap.exec(successCallback, errorCallback, "com.phonegap.file", "getParent", [this.fullPath]);
 };
 
 /**
@@ -2289,7 +2603,7 @@ DirectoryEntry.prototype.getParent = function(successCallback, errorCallback) {
  * @param {Function} errorCallback is called with a FileError
  */
 DirectoryEntry.prototype.moveTo = function(parent, newName, successCallback, errorCallback) {
-    PhoneGap.exec(successCallback, errorCallback, "File", "moveTo", [this.fullPath, parent, newName]);
+    PhoneGap.exec(successCallback, errorCallback, "com.phonegap.file", "moveTo", [this.fullPath, parent, newName]);
 };
 
 /**
@@ -2299,7 +2613,7 @@ DirectoryEntry.prototype.moveTo = function(parent, newName, successCallback, err
  * @param {Function} errorCallback is called with a FileError
  */
 DirectoryEntry.prototype.remove = function(successCallback, errorCallback) {
-    PhoneGap.exec(successCallback, errorCallback, "File", "remove", [this.fullPath]);
+    PhoneGap.exec(successCallback, errorCallback, "com.phonegap.file", "remove", [this.fullPath]);
 };
 
 /**
@@ -2311,7 +2625,7 @@ DirectoryEntry.prototype.remove = function(successCallback, errorCallback) {
  */
 DirectoryEntry.prototype.toURI = function(mimeType, successCallback, errorCallback) {
     return "file://localhost" + this.fullPath;
-    //PhoneGap.exec(successCallback, errorCallback, "File", "toURI", [this.fullPath, mimeType]);
+    //PhoneGap.exec(successCallback, errorCallback, "com.phonegap.file", "toURI", [this.fullPath, mimeType]);
 };
 
 /**
@@ -2330,7 +2644,7 @@ DirectoryEntry.prototype.createReader = function(successCallback, errorCallback)
  * @param {Function} errorCallback is called with a FileError
  */
 DirectoryEntry.prototype.getDirectory = function(path, options, successCallback, errorCallback) {
-    PhoneGap.exec(successCallback, errorCallback, "File", "getDirectory", [this.fullPath, path, options]);
+    PhoneGap.exec(successCallback, errorCallback, "com.phonegap.file", "getDirectory", [this.fullPath, path, options]);
 };
 
 /**
@@ -2342,7 +2656,7 @@ DirectoryEntry.prototype.getDirectory = function(path, options, successCallback,
  * @param {Function} errorCallback is called with a FileError
  */
 DirectoryEntry.prototype.getFile = function(path, options, successCallback, errorCallback) {
-    PhoneGap.exec(successCallback, errorCallback, "File", "getFile", [this.fullPath, path, options]);
+    PhoneGap.exec(successCallback, errorCallback, "com.phonegap.file", "getFile", [this.fullPath, path, options]);
 };
 
 /**
@@ -2352,7 +2666,7 @@ DirectoryEntry.prototype.getFile = function(path, options, successCallback, erro
  * @param {Function} errorCallback is called with a FileError
  */
 DirectoryEntry.prototype.removeRecursively = function(successCallback, errorCallback) {
-    PhoneGap.exec(successCallback, errorCallback, "File", "removeRecursively", [this.fullPath]);
+    PhoneGap.exec(successCallback, errorCallback, "com.phonegap.file", "removeRecursively", [this.fullPath]);
 };
 
 /**
@@ -2369,7 +2683,7 @@ DirectoryReader = function(fullPath){
  * @param {Function} errorCallback is called with a FileError
  */
 DirectoryReader.prototype.readEntries = function(successCallback, errorCallback) {
-    PhoneGap.exec(successCallback, errorCallback, "File", "readEntries", [this.fullPath]);
+    PhoneGap.exec(successCallback, errorCallback, "com.phonegap.file", "readEntries", [this.fullPath]);
 }
  
 /**
@@ -2398,7 +2712,7 @@ FileEntry = function() {
  * @param {Function} errorCallback is called with a FileError
  */
 FileEntry.prototype.copyTo = function(parent, newName, successCallback, errorCallback) {
-    PhoneGap.exec(successCallback, errorCallback, "File", "copyTo", [this.fullPath, parent, newName]);
+    PhoneGap.exec(successCallback, errorCallback, "com.phonegap.file", "copyTo", [this.fullPath, parent, newName]);
 };
 
 /**
@@ -2408,7 +2722,7 @@ FileEntry.prototype.copyTo = function(parent, newName, successCallback, errorCal
  * @param {Function} errorCallback is called with a FileError
  */
 FileEntry.prototype.getMetadata = function(successCallback, errorCallback) {
-    PhoneGap.exec(successCallback, errorCallback, "File", "getMetadata", [this.fullPath]);
+    PhoneGap.exec(successCallback, errorCallback, "com.phonegap.file", "getMetadata", [this.fullPath]);
 };
 
 /**
@@ -2418,7 +2732,7 @@ FileEntry.prototype.getMetadata = function(successCallback, errorCallback) {
  * @param {Function} errorCallback is called with a FileError
  */
 FileEntry.prototype.getParent = function(successCallback, errorCallback) {
-    PhoneGap.exec(successCallback, errorCallback, "File", "getParent", [this.fullPath]);
+    PhoneGap.exec(successCallback, errorCallback, "com.phonegap.file", "getParent", [this.fullPath]);
 };
 
 /**
@@ -2430,7 +2744,7 @@ FileEntry.prototype.getParent = function(successCallback, errorCallback) {
  * @param {Function} errorCallback is called with a FileError
  */
 FileEntry.prototype.moveTo = function(parent, newName, successCallback, errorCallback) {
-    PhoneGap.exec(successCallback, errorCallback, "File", "moveTo", [this.fullPath, parent, newName]);
+    PhoneGap.exec(successCallback, errorCallback, "com.phonegap.file", "moveTo", [this.fullPath, parent, newName]);
 };
 
 /**
@@ -2440,7 +2754,7 @@ FileEntry.prototype.moveTo = function(parent, newName, successCallback, errorCal
  * @param {Function} errorCallback is called with a FileError
  */
 FileEntry.prototype.remove = function(successCallback, errorCallback) {
-    PhoneGap.exec(successCallback, errorCallback, "File", "remove", [this.fullPath]);
+    PhoneGap.exec(successCallback, errorCallback, "com.phonegap.file", "remove", [this.fullPath]);
 };
 
 /**
@@ -2452,7 +2766,7 @@ FileEntry.prototype.remove = function(successCallback, errorCallback) {
  */
 FileEntry.prototype.toURI = function(mimeType, successCallback, errorCallback) {
     return "file://localhost" + this.fullPath;
-    //PhoneGap.exec(successCallback, errorCallback, "File", "toURI", [this.fullPath, mimeType]);
+    //PhoneGap.exec(successCallback, errorCallback, "com.phonegap.file", "toURI", [this.fullPath, mimeType]);
 };
 
 /**
@@ -2484,7 +2798,7 @@ FileEntry.prototype.createWriter = function(successCallback, errorCallback) {
  * @param {Function} errorCallback is called with a FileError
  */
 FileEntry.prototype.file = function(successCallback, errorCallback) {
-    PhoneGap.exec(successCallback, errorCallback, "File", "getFileMetadata", [this.fullPath]);
+    PhoneGap.exec(successCallback, errorCallback, "com.phonegap.file", "getFileMetadata", [this.fullPath]);
 };
 
 /**
@@ -2576,7 +2890,7 @@ FileTransfer.prototype.upload = function(filePath, server, successCallback, erro
         return;
     }
 	
-    PhoneGap.exec(successCallback, errorCallback, 'FileTransfer', 'upload', [options]);
+    PhoneGap.exec(successCallback, errorCallback, 'com.phonegap.filetransfer', 'upload', [options]);
 };
 
 FileTransfer.prototype._castTransferError = function(pluginResult) {
@@ -2842,14 +3156,15 @@ Geolocation.prototype.setError = function(error)
 
 };
 
-Geolocation.prototype.start = function(args) 
+Geolocation.prototype.start = function(positionOptions) 
 {
-    PhoneGap.exec("Location.startLocation", args);
+    PhoneGap.exec(null, null, "com.phonegap.geolocation", "startLocation", [positionOptions]);
+
 };
 
 Geolocation.prototype.stop = function() 
 {
-    PhoneGap.exec("Location.stopLocation");
+    PhoneGap.exec(null, null, "com.phonegap.geolocation", "stopLocation", []);
 };
 
 
@@ -3035,14 +3350,14 @@ Compass.prototype.setError = function(message)
     this.stop();
 };
 
-Compass.prototype.start = function(args) 
+Compass.prototype.start = function(options) 
 {
-    PhoneGap.exec("Location.startHeading", args);
+    PhoneGap.exec(null, null, "com.phonegap.geolocation", "startHeading", [options]);
 };
 
 Compass.prototype.stop = function() 
 {
-    PhoneGap.exec("Location.stopHeading");
+    PhoneGap.exec(null, null, "com.phonegap.geolocation", "stopHeading", []);
 };
 
 PhoneGap.addConstructor(function() 
@@ -3053,80 +3368,233 @@ PhoneGap.addConstructor(function()
     }
 });
 };
+
 if (!PhoneGap.hasResource("media")) {
 	PhoneGap.addResource("media");
 
-/**
- * Media/Audio override.
+/*
+ * PhoneGap is available under *either* the terms of the modified BSD license *or* the
+ * MIT License (2008). See http://opensource.org/licenses/alphabetical for full text.
  *
+ * Copyright (c) 2005-2010, Nitobi Software Inc.
+ * Copyright (c) 2010,2011 IBM Corporation
  */
- 
-Media = function(src, successCallback, errorCallback, downloadCompleteCallback) {
-	
-	if (!src) {
-		src = "documents://" + String((new Date()).getTime()).replace(/\D/gi,''); // random
-	}
-	this.src = src;
-	var successCB = (successCallback == undefined || successCallback == null) ? null : GetFunctionName(successCallback);
-	var errorCB = (errorCallback == undefined || errorCallback == null) ? null : GetFunctionName(errorCallback);
-	var downloadCB = (downloadCompleteCallback == undefined || downloadCompleteCallback == null) ? null : GetFunctionName(downloadCompleteCallback);
-	
-	this.successCallback = successCallback || null;
-	this.errorCallback = errorCallback || null;	
-	this.downloadCompleteCallback = downloadCompleteCallback || null;
-    
-	if (this.src != null) {
-		PhoneGap.exec("Sound.prepare", this.src, successCB, errorCB, downloadCB);
-	}
-}
- 
-Media.prototype.play = function(options) {
-	if (this.src != null) {
-		PhoneGap.exec("Sound.play", this.src, options);
-	}
+
+/**
+ * List of media objects.
+ * PRIVATE
+ */
+PhoneGap.mediaObjects = {};
+
+/**
+ * Object that receives native callbacks.
+ * PRIVATE
+ */
+PhoneGap.Media = function() {};
+
+
+/**
+ * Get the media object.
+ * PRIVATE
+ *
+ * @param id            The media object id (string)
+ */
+PhoneGap.Media.getMediaObject = function(id) {
+    return PhoneGap.mediaObjects[id];
 };
 
-Media.prototype.pause = function() {
-	if (this.src != null) {
-		PhoneGap.exec("Sound.pause", this.src);
-	}
+/**
+ * Audio has status update.
+ * PRIVATE
+ *
+ * @param id            The media object id (string)
+ * @param msg           The status message (int)
+ * @param value        The status code (int)
+ */
+PhoneGap.Media.onStatus = function(id, msg, value) {
+    var media = PhoneGap.mediaObjects[id];
+
+    // If state update
+    if (msg == Media.MEDIA_STATE) {
+        if (value == Media.MEDIA_STOPPED) {
+            if (media.successCallback) {
+                media.successCallback();
+            }
+        }
+        if (media.statusCallback) {
+            media.statusCallback(value);
+        }
+    }
+    else if (msg == Media.MEDIA_DURATION) {
+        media._duration = value;
+    }
+    else if (msg == Media.MEDIA_ERROR) {
+        if (media.errorCallback) {
+            media.errorCallback(value);
+        }
+    }
+    else if (msg == Media.MEDIA_POSITION) {
+    	media._position = value;
+    }
 };
 
-Media.prototype.stop = function() {
-	if (this.src != null) {
-		PhoneGap.exec("Sound.stop", this.src);
-	}
+/**
+ * This class provides access to the device media, interfaces to both sound and video
+ *
+ * @param src                   The file name or url to play
+ * @param successCallback       The callback to be called when the file is done playing or recording.
+ *                                  successCallback() - OPTIONAL
+ * @param errorCallback         The callback to be called if there is an error.
+ *                                  errorCallback(int errorCode) - OPTIONAL
+ * @param statusCallback        The callback to be called when media status has changed.
+ *                                  statusCallback(int statusCode) - OPTIONAL
+ * @param positionCallback      The callback to be called when media position has changed.
+ *                                  positionCallback(long position) - OPTIONAL
+ */
+Media = function(src, successCallback, errorCallback, statusCallback, positionCallback) {
+
+    // successCallback optional
+    if (successCallback && (typeof successCallback != "function")) {
+        console.log("Media Error: successCallback is not a function");
+        return;
+    }
+
+    // errorCallback optional
+    if (errorCallback && (typeof errorCallback != "function")) {
+        console.log("Media Error: errorCallback is not a function");
+        return;
+    }
+
+    // statusCallback optional
+    if (statusCallback && (typeof statusCallback != "function")) {
+        console.log("Media Error: statusCallback is not a function");
+        return;
+    }
+
+    // positionCallback optional -- NOT SUPPORTED
+    if (positionCallback && (typeof positionCallback != "function")) {
+        console.log("Media Error: positionCallback is not a function");
+        return;
+    }
+
+    this.id = PhoneGap.createUUID();
+    PhoneGap.mediaObjects[this.id] = this;
+    this.src = src;
+    this.successCallback = successCallback;
+    this.errorCallback = errorCallback;
+    this.statusCallback = statusCallback;
+    this.positionCallback = positionCallback;
+    this._duration = -1;
+    this._position = -1;
 };
 
-Media.prototype.startAudioRecord = function(options) {
-	if (this.src != null) {
-		PhoneGap.exec("Sound.startAudioRecord", this.src, options);
-	}
-};
+// Media messages
+Media.MEDIA_STATE = 1;
+Media.MEDIA_DURATION = 2;
+Media.MEDIA_POSITION = 3;
+Media.MEDIA_ERROR = 9;
 
-Media.prototype.stopAudioRecord = function() {
-	if (this.src != null) {
-		PhoneGap.exec("Sound.stopAudioRecord", this.src);
-	}
-};
+// Media states
+Media.MEDIA_NONE = 0;
+Media.MEDIA_STARTING = 1;
+Media.MEDIA_RUNNING = 2;
+Media.MEDIA_PAUSED = 3;
+Media.MEDIA_STOPPED = 4;
+Media.MEDIA_MSG = ["None", "Starting", "Running", "Paused", "Stopped"];
 
+// TODO: Will MediaError be used?
 /**
  * This class contains information about any Media errors.
  * @constructor
  */
+
 MediaError = function() {
 	this.code = null,
 	this.message = "";
 }
 
-MediaError.MEDIA_ERR_ABORTED 		= 1;
-MediaError.MEDIA_ERR_NETWORK 		= 2;
-MediaError.MEDIA_ERR_DECODE 		= 3;
+
+MediaError.MEDIA_ERR_ABORTED        = 1;
+MediaError.MEDIA_ERR_NETWORK        = 2;
+MediaError.MEDIA_ERR_DECODE         = 3;
 MediaError.MEDIA_ERR_NONE_SUPPORTED = 4;
 
+/**
+ * Start or resume playing audio file.
+ */
+Media.prototype.play = function(options) {
+    PhoneGap.exec(null, null, "com.phonegap.media", "play", [this.id, this.src, options]);
+};
 
-//if (typeof navigator.audio == "undefined") navigator.audio = new Media(src);
-};if (!PhoneGap.hasResource("notification")) {
+/**
+ * Stop playing audio file.
+ */
+Media.prototype.stop = function() {
+    PhoneGap.exec(null, null, "com.phonegap.media","stop", [this.id, this.src]);
+};
+
+/**
+ * Pause playing audio file.
+ */
+Media.prototype.pause = function() {
+    PhoneGap.exec(null, null, "com.phonegap.media","pause", [this.id, this.src]);
+};
+
+/**
+ * Seek or jump to a new time in the track..
+ */
+Media.prototype.seekTo = function(milliseconds) {
+    PhoneGap.exec(null, null, "com.phonegap.media", "seekTo", [this.id, this.src, milliseconds]);
+};
+
+/**
+ * Get duration of an audio file.
+ * The duration is only set for audio that is playing, paused or stopped.
+ *
+ * @return      duration or -1 if not known.
+ */
+Media.prototype.getDuration = function() {
+    return this._duration;
+};
+
+/**
+ * Get position of audio.
+ *
+ * @return
+ */
+Media.prototype.getCurrentPosition = function(successCB, errorCB) {
+	var errCallback = (errorCB == undefined || errorCB == null) ? null : errorCB;
+    PhoneGap.exec(successCB, errorCB, "com.phonegap.media", "getCurrentPosition", [this.id, this.src]);
+};
+
+// iOS only.  prepare/load the audio in preparation for playing
+Media.prototype.prepare = function(successCB, errorCB) {
+	PhoneGap.exec(successCB, errorCB, "com.phonegap.media", "prepare", [this.id, this.src]);
+}
+
+/**
+ * Start recording audio file.
+ */
+Media.prototype.startRecord = function() {
+    PhoneGap.exec(null, null, "com.phonegap.media","startAudioRecord", [this.id, this.src]);
+};
+
+/**
+ * Stop recording audio file.
+ */
+Media.prototype.stopRecord = function() {
+    PhoneGap.exec(null, null, "com.phonegap.media","stopAudioRecord", [this.id, this.src]);
+};
+
+/**
+ * Release the resources.
+ */
+Media.prototype.release = function() {
+    PhoneGap.exec(null, null, "com.phonegap.media","release", [this.id, this.src]);
+};
+
+};
+if (!PhoneGap.hasResource("notification")) {
 	PhoneGap.addResource("notification");
 
 /**
@@ -3146,7 +3614,7 @@ Notification = function() {
 Notification.prototype.alert = function(message, completeCallback, title, buttonLabel) {
     var _title = (title || "Alert");
     var _buttonLabel = (buttonLabel || "OK");
-    PhoneGap.exec(completeCallback, null, "Notification", "alert", [message,{ "title": _title, "buttonLabel": _buttonLabel}]);
+    PhoneGap.exec(completeCallback, null, "com.phonegap.notification", "alert", [message,{ "title": _title, "buttonLabel": _buttonLabel}]);
 };
 
 /**
@@ -3163,28 +3631,7 @@ Notification.prototype.confirm = function(message, resultCallback, title, button
     var _buttonLabels = (buttonLabels || "OK,Cancel");
     this.alert(message, resultCallback, _title, _buttonLabels);
 };
-/**
- * Start spinning the activity indicator on the statusbar
- */
-Notification.prototype.activityStart = function() {
-    PhoneGap.exec(null, null, "Notification", "activityStart", []);
-};
 
-/**
- * Stop spinning the activity indicator on the statusbar, if it's currently spinning
- */
-Notification.prototype.activityStop = function() {
-    PhoneGap.exec(null, null, "Notification", "activityStop", []);
-};
-
-// iPhone only
-Notification.prototype.loadingStart = function(options) {
-    PhoneGap.exec(null, null, "Notification","loadingStart", [options]);
-};
-// iPhone only
-Notification.prototype.loadingStop = function() {
-    PhoneGap.exec(null, null, "Notification","loadingStop", []);
-};
 /**
  * Causes the device to blink a status LED.
  * @param {Integer} count The number of blinks.
@@ -3195,7 +3642,7 @@ Notification.prototype.blink = function(count, colour) {
 };
 
 Notification.prototype.vibrate = function(mills) {
-	PhoneGap.exec(null, null, "Notification", "vibrate", []);
+	PhoneGap.exec(null, null, "com.phonegap.notification", "vibrate", []);
 };
 
 Notification.prototype.beep = function(count, volume) {
@@ -3275,9 +3722,63 @@ Orientation.prototype.clearWatch = function(watchId) {
 	clearInterval(watchId);
 };
 
-PhoneGap.addConstructor(function() {
-    if (typeof navigator.orientation == "undefined") navigator.orientation = new Orientation();
-});
+Orientation.install = function()
+{
+    if (typeof navigator.orientation == "undefined") { 
+		navigator.orientation = new Orientation();
+	}
+	
+	var windowDispatchAvailable = !(window.dispatchEvent === undefined); // undefined in iOS 3.x
+	if (windowDispatchAvailable) {
+		return;
+	} 
+	
+	// the code below is to capture window.add/remove eventListener calls on window
+	// this is for iOS 3.x where listening on 'orientationchange' events don't work on document/window (don't know why)
+	// however, window.onorientationchange DOES handle the 'orientationchange' event (sent through document), so...
+	// then we multiplex the window.onorientationchange event (consequently - people shouldn't overwrite this)
+	
+	var self = this;
+	var orientationchangeEvent = 'orientationchange';
+	var newOrientationchangeEvent = 'orientationchange_pg';
+	
+	// backup original `window.addEventListener`, `window.removeEventListener`
+    var _addEventListener = window.addEventListener;
+    var _removeEventListener = window.removeEventListener;
+
+	window.onorientationchange = function() {
+		PhoneGap.fireEvent(newOrientationchangeEvent, window);
+	}
+	
+    // override `window.addEventListener`
+    window.addEventListener = function() {
+        if (arguments[0] === orientationchangeEvent) {
+			arguments[0] = newOrientationchangeEvent; 
+		} 
+													
+		if (!windowDispatchAvailable) {
+			return document.addEventListener.apply(this, arguments);
+		} else {
+			return _addEventListener.apply(this, arguments);
+		}
+    };	
+
+    // override `window.removeEventListener'
+    window.removeEventListener = function() {
+        if (arguments[0] === orientationchangeEvent) {
+			arguments[0] = newOrientationchangeEvent; 
+		} 
+		
+		if (!windowDispatchAvailable) {
+			return document.removeEventListener.apply(this, arguments);
+		} else {
+			return _removeEventListener.apply(this, arguments);
+		}
+    };	
+};
+
+PhoneGap.addConstructor(Orientation.install);
+
 };
 if (!PhoneGap.hasResource("sms")) {
 	PhoneGap.addResource("sms");
@@ -3330,67 +3831,56 @@ PhoneGap.addConstructor(function() {
 });
 };if (!PhoneGap.hasResource("network")) {
 	PhoneGap.addResource("network");
-	
+
 // //////////////////////////////////////////////////////////////////
-	
-Connection = function(type, homeNW, currentNW) {
+
+Connection = function() {
 	/*
 	 * One of the connection constants below.
 	 */
-	this.type = type || 0;
-	/*
-	 * The home network provider, only valid if cellular based.
-	 */
-	this.homeNW = homeNW || null;
-	/*
-	 * The current network provider, only valid if cellular based.
-     */
-	this.currentNW = currentNW || null;
+	this.type = Connection.UNKNOWN;
+
+	/* initialize from the extended DeviceInfo properties */
+    try {      
+		this.type	= DeviceInfo.connection.type;
+    } 
+	catch(e) {
+    }
 };
 
-Connection.UNKNOWN = 0; // Unknown connection type
-Connection.ETHERNET = 1;
-Connection.WIFI = 2;
-Connection.CELL_2G = 3;
-Connection.CELL_3G = 4;
-Connection.CELL_4G = 5;
-Connection.NONE = 20; // NO connectivity
-
-// //////////////////////////////////////////////////////////////////
-
-/**
- * This class contains information about any NetworkStatus.
- * @constructor
- */
-NetworkStatus = function() {
-	this.code = null;
-	this.message = "";
-}
-
-NetworkStatus.NOT_REACHABLE = 0;
-NetworkStatus.REACHABLE_VIA_CARRIER_DATA_NETWORK = 1;
-NetworkStatus.REACHABLE_VIA_WIFI_NETWORK = 2;
-
-/**
- * This class provides access to device Network data (reachability).
- * @constructor
- */
-Network = function() {
-};
-
-/**
- * 
- * @param {Function} successCallback
- * @param {Function} errorCallback
- * @param {Object} options
- */
-Network.prototype.isReachable = function(hostName, successCallback, options) {
-	PhoneGap.exec("Network.isReachable", hostName, GetFunctionName(successCallback), options);
-};
+Connection.UNKNOWN = "unknown"; // Unknown connection type
+Connection.ETHERNET = "ethernet";
+Connection.WIFI = "wifi";
+Connection.CELL_2G = "2g"; // the default for iOS, for any cellular connection
+Connection.CELL_3G = "3g";
+Connection.CELL_4G = "4g";
+Connection.NONE = "none"; // NO connectivity
 
 
 PhoneGap.addConstructor(function() {
-    if (typeof navigator.network == "undefined") navigator.network = new Network();
-    if (typeof navigator.connection == "undefined") navigator.connection = new Connection();
+    if (typeof navigator.network == "undefined") navigator.network = {};
+    if (typeof navigator.network.connection == "undefined") navigator.network.connection = new Connection();
 });
+
+};if (!PhoneGap.hasResource("splashscreen")) {
+	PhoneGap.addResource("splashscreen");
+
+/**
+ * This class provides access to the splashscreen
+ */
+SplashScreen = function() {
+};
+
+SplashScreen.prototype.show = function() {
+    PhoneGap.exec(null, null, "com.phonegap.splashscreen", "show", []);
+};
+
+SplashScreen.prototype.hide = function() {
+    PhoneGap.exec(null, null, "com.phonegap.splashscreen", "hide", []);
+};
+
+PhoneGap.addConstructor(function() {
+    if (typeof navigator.splashscreen == "undefined") navigator.splashscreen = new SplashScreen();
+});
+
 };

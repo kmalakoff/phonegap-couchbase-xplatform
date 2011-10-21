@@ -4,45 +4,53 @@
 <dict>
 	<key>DetectPhoneNumber</key>
 	<true/>
-	<key>EnableAcceleration</key>
-	<true/>
-	<key>EnableLocation</key>
-	<true/>
-	<key>ExternalHosts</key>
-	<array>
-		<string>127.0.0.1</string>
-		<string>0.0.0.0</string>
-	</array>
 	<key>TopActivityIndicator</key>
 	<string>gray</string>
+	<key>EnableLocation</key>
+	<false/>
+	<key>EnableAcceleration</key>
+	<true/>
+	<key>EnableViewportScale</key>
+	<false/>
+	<key>AutoHideSplashScreen</key>
+	<true/>
+	<key>ShowSplashScreenSpinner</key>
+	<true/>
+	<key>MediaPlaybackRequiresUserAction</key>
+	<false/>
+	<key>AllowInlineMediaPlayback</key>
+	<false/>
+	<key>ExternalHosts</key>
+	<array>
+		<string>0.0.0.0</string>
+		<string>127.0.0.1</string>
+	</array>
 	<key>Plugins</key>
 	<dict>
-		<key>Accelerometer</key>
-		<string>Accelerometer</string>
-		<key>Camera</key>
-		<string>Camera</string>
-		<key>Connection</key>
-		<string>Connection</string>
-		<key>DebugConsole</key>
-		<string>DebugConsole</string>
-		<key>File</key>
-		<string>File</string>
-		<key>FileTransfer</key>
-		<string>FileTransfer</string>
-		<key>Image</key>
-		<string>Image</string>
-		<key>Location</key>
-		<string>Location</string>
-		<key>Movie</key>
-		<string>Movie</string>
-		<key>Network</key>
-		<string>Network</string>
-		<key>Notification</key>
-		<string>Notification</string>
-		<key>Sound</key>
-		<string>Sound</string>
-		<key>Capture</key>
-		<string>Capture</string>
+		<key>com.phonegap.accelerometer</key>
+		<string>PGAccelerometer</string>
+		<key>com.phonegap.camera</key>
+		<string>PGCamera</string>
+		<key>com.phonegap.connection</key>
+		<string>PGConnection</string>
+		<key>com.phonegap.contacts</key>
+		<string>PGContacts</string>
+		<key>com.phonegap.debugconsole</key>
+		<string>PGDebugConsole</string>
+		<key>com.phonegap.file</key>
+		<string>PGFile</string>
+		<key>com.phonegap.filetransfer</key>
+		<string>PGFileTransfer</string>
+		<key>com.phonegap.geolocation</key>
+		<string>PGLocation</string>
+		<key>com.phonegap.notification</key>
+		<string>PGNotification</string>
+		<key>com.phonegap.media</key>
+		<string>PGSound</string>
+		<key>com.phonegap.mediacapture</key>
+		<string>PGCapture</string>
+		<key>com.phonegap.splashscreen</key>
+		<string>PGSplashScreen</string>
 	</dict>
 </dict>
 </plist>
